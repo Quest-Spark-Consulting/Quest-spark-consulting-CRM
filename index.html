@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest Spark | Coaching Excellence</title>
+    <title>Quest Spark | Excellence in Coaching</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -22,8 +22,25 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-dark); min-height: 100vh; line-height: 1.6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
         h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 700; }
+
+        /* Loader Overlay */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-main); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 9999;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #loader.hidden { opacity: 0; pointer-events: none; transform: translateY(-20px); }
+        .spinner {
+            width: 60px; height: 60px; border: 5px solid #e2e8f0;
+            border-top: 5px solid var(--accent-red); border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 1.5rem;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .pulse { animation: pulse 2s infinite; color: var(--accent-red); font-weight: 700; letter-spacing: 2px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         /* Auth Gate */
         #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 2000; }
@@ -40,7 +57,7 @@
         .nav-link:hover { background: #f8fafc; color: var(--text-dark); }
         .nav-link.active { background: #eff6ff; color: var(--accent-blue); }
 
-        /* UI */
+        /* UI Components */
         .card { background: white; border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
         .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
@@ -75,8 +92,15 @@
 </head>
 <body>
 
+    <!-- Loading Dashboard -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <div class="pulse">QUEST SPARK</div>
+        <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.85rem;">Initializing Command Center...</p>
+    </div>
+
     <!-- Auth Gate -->
-    <div id="auth-gate">
+    <div id="auth-gate" style="display: none;">
         <div class="gate-card">
             <h1 style="color: var(--accent-red); margin-bottom: 2rem;">Quest Spark</h1>
             <div id="gate-options">
@@ -117,7 +141,7 @@
         </main>
     </div>
 
-    <!-- Details Modal (The Upgraded End) -->
+    <!-- Details Modal -->
     <div id="modal-details" class="modal">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2.5rem;">
@@ -149,7 +173,6 @@
                     
                     <div class="card" style="margin-top: 3rem; background: #f8fafc;">
                         <h3>Account Actions</h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Update password or delete record</p>
                         <div class="form-group"><label>Password</label><input type="text" id="det-pass"></div>
                         <div style="display: flex; gap: 0.5rem;">
                             <button class="btn btn-primary" style="flex: 1;" onclick="app.updatePass()">Save</button>
@@ -187,6 +210,11 @@
                 lucide.createIcons();
                 const { data } = await sb.from('config').select('value').eq('key', 'master_password').maybeSingle();
                 if (data) this.state.masterPass = data.value;
+                // Initially show Auth Gate after loader fake delay
+                setTimeout(() => {
+                    document.getElementById('loader').classList.add('hidden');
+                    document.getElementById('auth-gate').style.display = 'flex';
+                }, 1500);
             },
 
             showLogin(role) {
@@ -198,17 +226,25 @@
 
             async handleAuth(e) {
                 e.preventDefault();
+                app.toggleLoader(true, "Authenticating...");
                 const pass = document.getElementById('g-pass').value;
                 if (this.state.role === 'coach') {
                     if (pass === this.state.masterPass || pass === 'spark2024') this.unlock();
-                    else alert("Wrong Password");
+                    else { alert("Wrong Password"); app.toggleLoader(false); }
                 } else {
                     const phone = document.getElementById('g-phone').value;
                     const { data } = await sb.from('clients').select('*').ilike('phone', `%${phone.slice(-9)}`).maybeSingle();
                     if (data && String(data.password) === String(pass)) {
                         this.state.user = data; this.unlock();
-                    } else alert("Denied");
+                    } else { alert("Denied"); app.toggleLoader(false); }
                 }
+            },
+
+            toggleLoader(show, text = "Initializing...") {
+                const l = document.getElementById('loader');
+                l.querySelector('p').innerText = text;
+                if(show) l.classList.remove('hidden');
+                else l.classList.add('hidden');
             },
 
             unlock() {
@@ -222,10 +258,12 @@
             },
 
             async loadData() {
+                app.toggleLoader(true, "Syncing Command Center...");
                 const { data } = await sb.from('clients').select('*').order('name');
                 this.state.clients = data || [];
                 if (this.state.role === 'client') this.state.user = this.state.clients.find(c => c.id === this.state.user.id);
                 this.render();
+                setTimeout(() => app.toggleLoader(false), 800);
             },
 
             setView(v) {
@@ -241,6 +279,7 @@
 
             async saveNewClient(e) {
                 e.preventDefault();
+                app.toggleLoader(true, "Onboarding Client...");
                 await sb.from('clients').insert({
                     name: document.getElementById('n-name').value,
                     phone: document.getElementById('n-phone').value,
@@ -253,7 +292,7 @@
             showDetails(id) {
                 this.state.activeId = id;
                 const c = this.state.clients.find(x => x.id == id);
-                document.getElementById('det-header').innerHTML = `<h2>${c.name}</h2><p>${c.phone}</p>`;
+                document.getElementById('det-header').innerHTML = `<h2 style="font-size: 2rem;">${c.name}</h2><p style="color: var(--accent-blue); font-weight: 600;">${c.phone}</p>`;
                 document.getElementById('det-pass').value = c.password;
                 this.renderDetailsUI(c);
                 document.getElementById('modal-details').classList.add('active');
@@ -267,61 +306,64 @@
                     </a>
                 `).join('');
                 document.getElementById('det-tasks').innerHTML = (c.tasks || []).map(t => `
-                    <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem; border: 1px solid #eee; border-radius: 12px; margin-bottom: 0.5rem; ${t.status === 'done' ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem; border: 1px solid #eee; border-radius: 12px; margin-bottom: 0.5rem; background: white; ${t.status === 'done' ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
                         <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="app.toggleTask(${t.id})">
                         <span style="flex: 1; font-weight: 600;">${t.title}</span>
                     </div>
                 `).join('');
-                document.getElementById('det-timeline').innerHTML = (c.history || []).map(h => `<p style="font-size: 0.8rem; padding: 0.5rem; border-bottom: 1px solid #f1f5f9;"><b>${new Date(h.date).toLocaleDateString()}:</b> ${h.note}</p>`).join('');
+                document.getElementById('det-timeline').innerHTML = (c.history || []).map(h => `<div style="font-size: 0.8rem; padding: 0.8rem; border-bottom: 1px solid #f1f5f9; background: white; border-radius: 8px; margin-bottom: 0.5rem;"><b>${new Date(h.date).toLocaleDateString()}:</b> ${h.note}</div>`).join('');
                 lucide.createIcons();
             },
 
             async uploadFile(e, isCoach = false) {
                 const file = e.target.files[0];
                 if (!file) return;
+                app.toggleLoader(true, "Uploading Asset...");
                 const targetId = isCoach ? this.state.activeId : this.state.user.id;
                 const client = this.state.clients.find(x => x.id == targetId);
                 const path = `${targetId}/${Date.now()}_${file.name}`;
                 
                 const { data, error } = await sb.storage.from('quest-spark').upload(path, file);
-                if (error) { alert("Bucket 'quest-spark' not found. Please create it in Supabase Storage."); return; }
+                if (error) { alert("Bucket Error"); app.toggleLoader(false); return; }
                 
                 const url = sb.storage.from('quest-spark').getPublicUrl(path).data.publicUrl;
                 const files = client.files || [];
                 files.unshift({ name: file.name, url, type: file.type.includes('image') ? 'image' : 'file', date: new Date().toISOString() });
-                
                 const history = client.history || [];
                 history.unshift({ date: new Date().toISOString(), note: `Shared ${file.name}`, type: 'Asset', from: isCoach ? 'Coach' : 'Client' });
                 
                 await sb.from('clients').update({ files, history }).eq('id', targetId);
-                this.loadData();
+                await this.loadData();
                 if (isCoach) this.showDetails(targetId);
             },
 
             async addTask() {
                 const title = document.getElementById('det-task').value;
                 if (!title) return;
+                app.toggleLoader(true, "Assigning Homework...");
                 const c = this.state.clients.find(x => x.id == this.state.activeId);
                 const tasks = c.tasks || [];
                 tasks.unshift({ id: Date.now(), title, status: 'pending' });
                 await sb.from('clients').update({ tasks }).eq('id', c.id);
-                document.getElementById('det-task').value = ''; this.loadData(); this.showDetails(c.id);
+                document.getElementById('det-task').value = ''; 
+                await this.loadData(); this.showDetails(c.id);
             },
 
             async toggleTask(tid) {
                 const c = this.state.clients.find(x => x.id == this.state.activeId);
                 const tasks = c.tasks.map(t => t.id === tid ? {...t, status: t.status === 'done' ? 'pending' : 'done'} : t);
                 await sb.from('clients').update({ tasks }).eq('id', c.id);
-                this.loadData(); this.showDetails(c.id);
+                await this.loadData(); this.showDetails(c.id);
             },
 
             async updatePass() {
                 await sb.from('clients').update({ password: document.getElementById('det-pass').value }).eq('id', this.state.activeId);
-                alert("Password Updated"); this.loadData();
+                alert("Updated!"); this.loadData();
             },
 
             async deleteClient() {
-                if(confirm("Permanently delete?")) {
+                if(confirm("Confirm deletion?")) {
+                    app.toggleLoader(true, "Deleting Record...");
                     await sb.from('clients').delete().eq('id', this.state.activeId);
                     this.hideModals(); this.loadData();
                 }
@@ -330,7 +372,6 @@
             render() {
                 const el = document.getElementById('view-content');
                 if (this.state.role === 'client') return this.renderClientPortal(el);
-                
                 if (this.state.view === 'dashboard') this.renderDashboard(el);
                 if (this.state.view === 'clients') this.renderDirectory(el);
                 if (this.state.view === 'feedback') this.renderFeedback(el);
@@ -370,30 +411,30 @@
                 const c = this.state.user;
                 el.innerHTML = `
                     <div style="background: var(--accent-red); padding: 5rem 3rem; color: white; margin: -3rem -3rem 3rem -3rem;">
-                        <h1>Hello, ${c.name}</h1>
-                        <p>Your Private Journey Hub</p>
+                        <h1>Welcome, ${c.name}</h1>
+                        <p>Official Client Portal</p>
                     </div>
                     <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 2rem;">
                         <div>
                             <div class="card">
-                                <h3>Send Update</h3>
-                                <textarea id="cl-note" rows="3" style="margin: 1rem 0;" placeholder="Tell your coach something..."></textarea>
+                                <h3>Post Update</h3>
+                                <textarea id="cl-note" rows="3" style="margin: 1rem 0;" placeholder="Message your coach..."></textarea>
                                 <div style="display: flex; justify-content: space-between;">
                                     <label class="btn btn-secondary" style="cursor: pointer;">
-                                        <i data-lucide="image"></i> Share Image/File
+                                        <i data-lucide="image"></i> Attach File
                                         <input type="file" style="display: none;" onchange="app.uploadFile(event, false)">
                                     </label>
-                                    <button class="btn btn-primary" onclick="app.postClientNote()">Post</button>
+                                    <button class="btn btn-primary" onclick="app.postClientNote()">Submit</button>
                                 </div>
                             </div>
                             <div class="card">
-                                <h3>Timeline</h3>
-                                <div style="margin-top: 1.5rem;">${(c.history || []).map(h => `<p style="padding: 0.5rem; border-bottom: 1px solid #f1f5f9;">${h.note}</p>`).join('')}</div>
+                                <h3>Journey History</h3>
+                                <div style="margin-top: 1.5rem;">${(c.history || []).map(h => `<div style="padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 0.5rem; border-left: 3px solid ${h.from === 'Coach' ? 'var(--accent-red)' : 'var(--accent-blue)'};">${h.note}</div>`).join('')}</div>
                             </div>
                         </div>
                         <div>
                             <div class="card">
-                                <h3>Shared Assets</h3>
+                                <h3>Your Files</h3>
                                 <div class="asset-list">${(c.files || []).map(f => `
                                     <a href="${f.url}" target="_blank" class="asset-item">
                                         <img src="${f.type === 'image' ? f.url : 'https://cdn-icons-png.flaticon.com/512/2306/2306081.png'}">
@@ -401,7 +442,7 @@
                                     </a>
                                 `).join('')}</div>
                             </div>
-                            <a href="https://wa.me/254711980306" class="btn btn-wa" style="width: 100%; margin-top: 1rem;">Message Coach</a>
+                            <a href="https://wa.me/254711980306" class="btn btn-wa" style="width: 100%; margin-top: 1rem;">WhatsApp Coach</a>
                         </div>
                     </div>
                 `;
@@ -410,20 +451,21 @@
             async postClientNote() {
                 const note = document.getElementById('cl-note').value;
                 if (!note) return;
+                app.toggleLoader(true, "Posting Update...");
                 const history = this.state.user.history || [];
                 history.unshift({ date: new Date().toISOString(), note, type: 'Feedback', from: 'Client' });
                 await sb.from('clients').update({ history }).eq('id', this.state.user.id);
-                document.getElementById('cl-note').value = ''; this.loadData();
+                document.getElementById('cl-note').value = ''; await this.loadData();
             },
 
             cardTpl(c) {
                 return `<div class="card client-card" onclick="app.showDetails(${c.id})">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
                         <span class="badge ${c.status === 'Lead' ? 'badge-blue' : 'badge-green'}">${c.status}</span>
-                        <i data-lucide="arrow-right" style="width: 16px;"></i>
+                        <i data-lucide="external-link" style="width: 14px;"></i>
                     </div>
                     <h3>${c.name}</h3>
-                    <p style="color: var(--text-muted); font-size: 0.8rem;">${c.industry}</p>
+                    <p style="color: var(--text-muted); font-size: 0.8rem;">${c.phone}</p>
                 </div>`;
             }
         };
