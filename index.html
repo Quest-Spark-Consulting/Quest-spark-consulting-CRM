@@ -241,19 +241,49 @@
                 document.getElementById('gate-login').style.display = 'block';
                 if(role === 'client') document.getElementById('client-fields').style.display = 'block';
             },
-            async handleAuth(event) {
-                event.preventDefault();
-                app.toggleLoader(true, "Empowering dreams...");
-                const pass = document.getElementById('g-pass').value;
+            async handleAuth(e) {
+                e.preventDefault();
+                app.toggleLoader(true, "Verifying Identity...");
+                
+                const pass = document.getElementById('g-pass').value.trim();
+                
                 if (this.state.role === 'coach') {
                     if (pass === this.state.masterPass || pass === 'spark2024') this.unlock();
-                    else { alert("Security Denied"); app.toggleLoader(false); }
+                    else { 
+                        alert("Invalid Coach Security Key"); 
+                        app.toggleLoader(false); 
+                    }
                 } else {
-                    const phone = document.getElementById('g-phone').value;
-                    const { data } = await sb.from('clients').select('*').ilike('phone', `%${phone.slice(-9)}`).maybeSingle();
-                    if (data && String(data.password) === String(pass)) {
-                        this.state.user = data; this.unlock();
-                    } else { alert("Access Failed"); app.toggleLoader(false); }
+                    const rawPhone = document.getElementById('g-phone').value.replace(/\D/g, ''); // Keep only numbers
+                    if (rawPhone.length < 9) {
+                        alert("Please enter a valid phone number");
+                        app.toggleLoader(false);
+                        return;
+                    }
+
+                    const searchPart = rawPhone.slice(-9); // Match last 9 digits
+                    const { data, error } = await sb.from('clients')
+                        .select('*')
+                        .ilike('phone', `%${searchPart}%`)
+                        .maybeSingle();
+
+                    if (error) {
+                        console.error("Auth Error:", error);
+                        alert("System sync error. Please try again.");
+                        app.toggleLoader(false);
+                        return;
+                    }
+
+                    if (!data) {
+                        alert("Client profile not found. Please check the phone number.");
+                        app.toggleLoader(false);
+                    } else if (String(data.password).trim() === pass) {
+                        this.state.user = data;
+                        this.unlock();
+                    } else {
+                        alert("Incorrect Access Key for this profile.");
+                        app.toggleLoader(false);
+                    }
                 }
             },
             toggleLoader(show, text = "Empowering dreams...") {
