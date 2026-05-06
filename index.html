@@ -198,8 +198,8 @@
             },
 
             async showCoachLogin() {
-                const { data, error } = await sb.from('config').select('value').eq('key', 'master_password').maybeSingle();
-                if (!data) document.getElementById('modal-set-password').classList.add('active');
+                const { data } = await sb.from('config').select('value').eq('key', 'master_password');
+                if (!data || data.length === 0) document.getElementById('modal-set-password').classList.add('active');
                 else document.getElementById('modal-coach-auth').classList.add('active');
             },
 
@@ -212,12 +212,14 @@
             },
 
             async coachLogin(pass) {
-                const { data } = await sb.from('config').select('value').eq('key', 'master_password').single();
-                if (data && data.value === pass) {
+                const { data } = await sb.from('config').select('value').eq('key', 'master_password');
+                if (data && data.some(row => String(row.value).trim() === String(pass).trim())) {
                     this.state.role = 'coach';
                     await this.loadData();
                     this.showApp();
-                } else alert("Invalid Password");
+                } else {
+                    alert("Invalid Password. Please try again.");
+                }
             },
 
             async clientLogin(phone, pass) {
@@ -429,6 +431,7 @@
         document.getElementById('set-password-form').onsubmit = async e => {
             e.preventDefault();
             const pass = document.getElementById('new-master-pass').value;
+            await sb.from('config').delete().eq('key', 'master_password');
             await sb.from('config').insert({ key: 'master_password', value: pass });
             app.coachLogin(pass);
         };
