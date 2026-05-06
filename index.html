@@ -10,7 +10,16 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js');
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    reg.onupdatefound = () => {
+                        const installingWorker = reg.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                window.location.reload();
+                            }
+                        };
+                    };
+                });
             });
         }
     </script>
@@ -35,16 +44,49 @@
         /* Loader */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 9999;
-            transition: all 0.5s ease;
+            background: linear-gradient(135deg, var(--sky-blue) 0%, var(--sky-blue-deep) 100%);
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white;
+            transition: opacity 0.5s ease;
         }
         #loader.hidden { opacity: 0; pointer-events: none; }
-        .spinner { width: 50px; height: 50px; border: 4px solid #f1f5f9; border-top: 4px solid var(--sky-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1.5rem; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .spark-pulse { animation: pulse 1.5s infinite; color: white; }
         @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } }
+
+        /* Premium CSS Logo */
+        .qs-logo {
+            width: 100px; height: 100px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 100%);
+            border-radius: 28px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 3rem;
+            color: var(--sky-blue-deep);
+            box-shadow: 0 15px 35px rgba(14, 165, 233, 0.2), inset 0 -4px 0 rgba(14, 165, 233, 0.1);
+            position: relative;
+            border: 2px solid white;
+            margin-bottom: 2rem;
+            letter-spacing: -2px;
+        }
+        .qs-logo::after {
+            content: '';
+            position: absolute; top: -5px; right: -5px;
+            width: 20px; height: 20px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .qs-logo-sm { width: 50px; height: 50px; border-radius: 14px; font-size: 1.5rem; margin-bottom: 0; border-width: 1.5px; }
+        .qs-logo-sm::after { width: 12px; height: 12px; top: -3px; right: -3px; border-width: 2px; }
+        
+        .qs-logo-lg { width: 120px; height: 120px; border-radius: 35px; font-size: 3.5rem; }
+        .qs-logo-lg::after { width: 24px; height: 24px; top: -6px; right: -6px; border-width: 4px; }
 
         /* Sidebar */
         #app { display: none; min-height: 100vh; }
@@ -70,7 +112,7 @@
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
         .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
         .client-card { transition: all 0.3s; cursor: pointer; border: 1px solid #f1f5f9; }
-        .client-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(14, 165, 233, 0.2); border-color: var(--sky-blue); }
+        .client-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(14, 165, 233, 0.1); border-color: var(--sky-blue); }
 
         .btn { padding: 0.9rem 1.75rem; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.75rem; font-family: inherit; font-size: 0.9rem; }
         .btn-primary { background: var(--accent-red); color: white; box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.39); }
@@ -99,16 +141,18 @@
 <body>
 
     <div id="loader">
-        <img src="icon.jpg" style="width: 120px; height: 120px; object-fit: contain; margin-bottom: 2rem; border-radius: 20%; animation: pulse 2s infinite;">
-        <h1 style="font-family: 'Outfit'; color: var(--sky-blue-deep); letter-spacing: 2px;">QUEST SPARK</h1>
-        <p style="margin-top: 0.5rem; color: var(--text-muted); font-weight: 600;">Empowering dreams...</p>
+        <div class="qs-logo qs-logo-lg">QS</div>
+        <div class="spinner"></div>
+        <h1 style="font-family: 'Outfit'; color: white; letter-spacing: 4px; font-size: 2.5rem;">QUEST SPARK</h1>
+        <p style="margin-top: 0.5rem; color: rgba(255,255,255,0.9); font-weight: 600;">Empowering dreams...</p>
+        <p style="position: fixed; bottom: 20px; font-size: 0.7rem; color: rgba(255,255,255,0.5);">v1.2.0 (Sky Blue Edition)</p>
     </div>
 
     <!-- Auth Gate -->
-    <div id="auth-gate" style="display: none;">
-        <div class="gate-card" style="background: white; padding: 4rem; border-radius: 32px; box-shadow: 0 25px 50px -12px rgba(14, 165, 233, 0.2); width: 100%; max-width: 440px; text-align: center;">
-            <img src="icon.jpg" style="width: 100px; height: 100px; object-fit: contain; margin-bottom: 1.5rem; border-radius: 15%;">
-            <h1 style="color: var(--sky-blue-deep); font-size: 3rem; margin-bottom: 2rem; font-family: 'Outfit';">QS</h1>
+    <div id="auth-gate" style="display: none; height: 100vh; align-items: center; justify-content: center; background: #f0f9ff;">
+        <div class="gate-card" style="background: white; padding: 4rem; border-radius: 40px; box-shadow: 0 40px 100px -20px rgba(14, 165, 233, 0.25); width: 90%; max-width: 440px; text-align: center; border: 1px solid #e0f2fe; display: flex; flex-direction: column; align-items: center;">
+            <div class="qs-logo">QS</div>
+            <h1 style="color: var(--sky-blue-deep); font-size: 2.2rem; margin-bottom: 2rem; font-family: 'Outfit'; letter-spacing: 1px; width: 100%;">QUEST SPARK</h1>
             <div id="gate-options" style="display: flex; flex-direction: column; gap: 1.25rem;">
                 <button class="btn btn-sky" style="justify-content: center; font-size: 1rem;" onclick="app.showLogin('coach')">Coach Portal</button>
                 <button class="btn btn-secondary" style="justify-content: center; font-size: 1rem;" onclick="app.showLogin('client')">Client Portal</button>
@@ -116,9 +160,9 @@
             <div id="gate-login" style="display: none; margin-top: 1.5rem;">
                 <form onsubmit="app.handleAuth(event)">
                     <div id="client-fields" style="display: none;">
-                        <input type="text" id="g-phone" placeholder="Phone Number" style="margin-bottom: 1rem;">
+                        <input type="text" id="phone" placeholder="Phone Number" style="margin-bottom: 1rem;">
                     </div>
-                    <input type="password" id="g-pass" placeholder="Secure Key" style="margin-bottom: 1.5rem;" required>
+                    <input type="password" id="pass" placeholder="Secure Key" style="margin-bottom: 1.5rem;" required>
                     <button type="submit" class="btn btn-sky" style="width: 100%; justify-content: center;">Enter QS Ecosystem</button>
                     <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; justify-content: center;" onclick="location.reload()">Back</button>
                 </form>
@@ -129,8 +173,8 @@
     <div id="app">
         <aside>
             <div class="logo">
-                <img src="icon.jpg" style="width: 50px; height: 50px; object-fit: contain; border-radius: 10px;">
-                <b>QS</b>
+                <div class="qs-logo qs-logo-sm" style="background: white;">QS</div>
+                <b style="letter-spacing: 1px;">QS</b>
             </div>
             <nav>
                 <a href="#" class="nav-link active" id="nav-dashboard" onclick="app.setView('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</a>
@@ -193,7 +237,7 @@
     <div id="modal-add-client" class="modal">
         <div class="modal-content" style="max-width: 480px;">
             <h2 style="font-size: 2rem;">QS Onboarding</h2>
-            <form onsubmit="app.saveNewClient(e)" style="margin-top: 2rem;">
+            <form onsubmit="app.saveNewClient(event)" style="margin-top: 2rem;">
                 <div style="margin-bottom: 1.25rem;"><label style="font-size: 0.8rem; font-weight: 700;">Full Name</label><input type="text" id="n-name" required></div>
                 <div style="margin-bottom: 1.25rem;"><label style="font-size: 0.8rem; font-weight: 700;">Phone</label><input type="text" id="n-phone" required></div>
                 <div style="margin-bottom: 2rem;"><label style="font-size: 0.8rem; font-weight: 700;">Partnership Status</label><select id="n-status"><option value="Lead">Potential Lead</option><option value="Onboarded">Active Partner</option></select></div>
@@ -215,7 +259,7 @@
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault();
                     this.state.deferredPrompt = e;
-                    this.render(); // Re-render to show install button
+                    this.render(); 
                 });
 
                 const { data } = await sb.from('config').select('value').eq('key', 'master_password').maybeSingle();
@@ -244,28 +288,31 @@
             },
             async handleAuth(e) {
                 e.preventDefault();
-                app.toggleLoader(true, "Verifying Identity...");
-                
-                const pass = document.getElementById('g-pass').value.trim();
+                app.toggleLoader(true, "Verifying Portal Access...");
+                const phoneInput = document.getElementById('phone').value.trim();
+                const phoneDigits = phoneInput.replace(/\D/g, '');
+                const phoneSuffix = phoneDigits.slice(-9);
+                const pass = document.getElementById('pass').value.trim();
                 
                 if (this.state.role === 'coach') {
-                    if (pass === this.state.masterPass || pass === 'spark2024') this.unlock();
-                    else { 
-                        alert("Invalid Coach Security Key"); 
-                        app.toggleLoader(false); 
+                    // Coach phone: 0711980306 -> suffix: 11980306 (wait, last 9 is 11980306?)
+                    // 0711980306 is 10 digits. Last 9 is 711980306.
+                    if (pass === 'QS2026' && phoneSuffix === '711980306') {
+                        this.unlock();
+                    } else {
+                        alert("Invalid Coach Credentials");
+                        app.toggleLoader(false);
                     }
                 } else {
-                    const rawPhone = document.getElementById('g-phone').value.replace(/\D/g, ''); // Keep only numbers
-                    if (rawPhone.length < 9) {
+                    if (phoneDigits.length < 9) {
                         alert("Please enter a valid phone number");
                         app.toggleLoader(false);
                         return;
                     }
 
-                    const searchPart = rawPhone.slice(-9); // Match last 9 digits
                     const { data, error } = await sb.from('clients')
                         .select('*')
-                        .ilike('phone', `%${searchPart}%`)
+                        .ilike('phone', `%${phoneSuffix}%`)
                         .maybeSingle();
 
                     if (error) {
@@ -418,24 +465,27 @@
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (this.state.deferredPrompt) {
                     return `
-                        <div class="card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; margin-bottom: 2.5rem; box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;">
-                                <div>
-                                    <h3 style="color: white; font-size: 1.25rem;">🚀 Install QS App</h3>
-                                    <p style="opacity: 0.9; font-size: 0.85rem; margin-top: 0.25rem;">Add QS to your home screen for a premium experience.</p>
+                        <div class="card" style="background: linear-gradient(135deg, var(--sky-blue), var(--sky-blue-deep)); color: white; border: none; margin-bottom: 2.5rem; box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4); overflow: hidden; position: relative;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; position: relative; z-index: 2;">
+                                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                                    <div class="qs-logo qs-logo-sm" style="background: white;">QS</div>
+                                    <div>
+                                        <h3 style="color: white; font-size: 1.25rem;">🚀 Install QS App</h3>
+                                        <p style="opacity: 0.9; font-size: 0.85rem; margin-top: 0.25rem;">Add QS to your home screen for a premium experience.</p>
+                                    </div>
                                 </div>
-                                <button class="btn" style="background: white; color: var(--sky-blue-deep); min-width: 140px; justify-content: center;" onclick="app.installApp()">Install Now</button>
+                                <button class="btn" style="background: white; color: var(--sky-blue-deep); min-width: 140px; justify-content: center; font-weight: 800;" onclick="app.installApp()">Install Now</button>
                             </div>
                         </div>
                     `;
                 } else if (isIOS) {
                     return `
-                        <div class="card" style="background: white; border: 2px solid var(--sky-blue); margin-bottom: 2.5rem;">
+                        <div class="card" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 2px solid var(--sky-blue); margin-bottom: 2.5rem; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.1);">
                             <div style="display: flex; gap: 1.5rem; align-items: center;">
-                                <div style="background: #f0f9ff; padding: 0.75rem; border-radius: 12px;"><i data-lucide="apple" style="color: var(--sky-blue); width: 24px; height: 24px;"></i></div>
+                                <div style="background: white; padding: 0.75rem; border-radius: 12px; box-shadow: var(--shadow);"><i data-lucide="apple" style="color: var(--sky-blue); width: 24px; height: 24px;"></i></div>
                                 <div>
-                                    <h3 style="color: var(--sky-blue-deep);">iPhone App Setup</h3>
-                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Tap <b>Share</b> <i data-lucide="share" style="width:14px; display:inline;"></i> then <b>"Add to Home Screen"</b> to install.</p>
+                                    <h3 style="color: var(--sky-blue-deep); font-weight: 800;">iPhone App Mode</h3>
+                                    <p style="color: var(--text-dark); font-size: 0.9rem; margin-top: 0.25rem; font-weight: 600;">Tap <i data-lucide="share" style="width:16px; display:inline; color: var(--sky-blue-deep);"></i> then <b style="color: var(--sky-blue-deep);">"Add to Home Screen"</b></p>
                                 </div>
                             </div>
                         </div>
@@ -482,8 +532,13 @@
                 const c = this.state.user;
                 el.innerHTML = `
                     <div style="background: linear-gradient(135deg, var(--sky-blue), var(--sky-blue-deep)); padding: 7rem 5rem; color: white; margin: -3rem -3rem 4rem -3rem; border-radius: 0 0 50px 50px; box-shadow: 0 20px 40px rgba(14, 165, 233, 0.2); position: relative; z-index: 1;">
-                        <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; font-family: 'Outfit';">Welcome, ${c.name}</h1>
-                        <p style="font-weight: 700; letter-spacing: 2px; opacity: 0.9;">OFFICIAL QS ECOSYSTEM ACCESS</p>
+                        <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 1rem;">
+                            <div class="qs-logo" style="background: white; margin-bottom: 0;">QS</div>
+                            <div>
+                                <h1 style="font-size: 3.5rem; margin-bottom: 0.25rem; font-family: 'Outfit';">Welcome, ${c.name}</h1>
+                                <p style="font-weight: 700; letter-spacing: 2px; opacity: 0.9; text-transform: uppercase;">Official QS Ecosystem Access</p>
+                            </div>
+                        </div>
                     </div>
                     
                     <div style="position: relative; z-index: 2; margin-top: -2rem;">
