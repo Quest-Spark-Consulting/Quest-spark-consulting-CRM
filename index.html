@@ -11,14 +11,14 @@
         
         :root {
             --bg-main: #f0f9ff;
-            --glass: rgba(255, 255, 255, 0.85);
+            --glass: rgba(255, 255, 255, 0.9);
             --accent-red: #8b1e1e;
             --accent-blue: #0284c7;
             --accent-emerald: #059669;
             --text-dark: #0f172a;
             --text-muted: #475569;
             --border: rgba(0, 0, 0, 0.1);
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --shadow: 0 10px 40px rgba(2, 132, 199, 0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -40,8 +40,8 @@
 
         /* Navigation */
         .logo { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 3rem; color: var(--accent-red); font-size: 1.25rem; }
-        .nav-link { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; color: var(--text-muted); text-decoration: none; border-radius: 12px; margin-bottom: 0.5rem; transition: all 0.2s; font-weight: 500; }
-        .nav-link:hover { background: #f8fafc; color: var(--text-dark); }
+        .nav-link { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1rem; color: var(--text-muted); text-decoration: none; border-radius: 12px; margin-bottom: 0.5rem; transition: all 0.2s; font-weight: 500; }
+        .nav-link:hover { background: #f1f5f9; color: var(--text-dark); }
         .nav-link.active { background: #eff6ff; color: var(--accent-blue); }
 
         /* Cards */
@@ -49,7 +49,7 @@
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
         .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
         .client-card { transition: all 0.3s; border-left: 5px solid transparent; cursor: pointer; }
-        .client-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+        .client-card:hover { transform: translateY(-4px); box-shadow: 0 15px 45px rgba(2, 132, 199, 0.1); }
 
         /* Buttons */
         .btn { padding: 0.75rem 1.5rem; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-family: inherit; font-size: 0.9rem; }
@@ -60,19 +60,18 @@
         /* Modals */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 3000; }
         .modal.active { display: flex; }
-        .modal-content { background: white; padding: 2.5rem; border-radius: 28px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); }
+        .modal-content { background: white; padding: 2.5rem; border-radius: 28px; width: 95%; max-width: 850px; max-height: 90vh; overflow-y: auto; }
 
         .form-group { margin-bottom: 1.25rem; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted); }
         input, select, textarea { width: 100%; padding: 0.85rem; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; }
 
-        /* Timeline & Tasks */
-        .timeline { border-left: 2px solid #e2e8f0; padding-left: 1.5rem; margin-left: 0.5rem; }
-        .timeline-item { margin-bottom: 1.5rem; position: relative; }
-        .timeline-item::before { content: ''; width: 10px; height: 10px; background: var(--accent-red); border-radius: 50%; position: absolute; left: -1.9rem; top: 0.5rem; border: 2px solid white; }
+        /* Timeline & Feedback */
+        .timeline { border-left: 2.5px solid #e2e8f0; padding-left: 1.5rem; }
+        .timeline-item { margin-bottom: 2rem; position: relative; }
+        .timeline-item::before { content: ''; width: 12px; height: 12px; background: var(--accent-red); border-radius: 50%; position: absolute; left: -1.95rem; top: 0.45rem; border: 3px solid white; }
         
-        .task-row { display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: #f8fafc; border-radius: 12px; margin-bottom: 0.5rem; border: 1px solid #eee; }
-        .task-row.done { opacity: 0.6; text-decoration: line-through; }
+        .feedback-card { border-left: 4px solid var(--accent-blue); background: white; padding: 1rem; border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
 
         .badge { padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
         .badge-feedback { background: #fef3c7; color: #92400e; }
@@ -98,7 +97,7 @@
                         <input type="text" id="g-phone" placeholder="Phone Number" style="margin-top: 1rem;">
                     </div>
                     <input type="password" id="g-pass" placeholder="Password" style="margin: 1rem 0;" required>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Unlock</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Unlock Access</button>
                     <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; justify-content: center;" onclick="location.reload()">Back</button>
                 </form>
             </div>
@@ -111,8 +110,9 @@
             <div class="logo"><b>Quest Spark</b></div>
             <nav>
                 <a href="#" class="nav-link active" id="nav-dashboard" onclick="app.setView('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-                <a href="#" class="nav-link" id="nav-clients" onclick="app.setView('clients')"><i data-lucide="users"></i> Clients</a>
-                <a href="#" class="nav-link" id="nav-reports" onclick="app.setView('reports')"><i data-lucide="bar-chart-3"></i> Reports</a>
+                <a href="#" class="nav-link" id="nav-clients" onclick="app.setView('clients')"><i data-lucide="users"></i> Directory</a>
+                <a href="#" class="nav-link" id="nav-feedback" onclick="app.setView('feedback')"><i data-lucide="message-square"></i> Feedback</a>
+                <a href="#" class="nav-link" id="nav-reports" onclick="app.setView('reports')"><i data-lucide="bar-chart-3"></i> Log</a>
                 <div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem;">
                     <button class="btn btn-primary" style="width: 100%;" onclick="app.showAddClient()">+ New Client</button>
                 </div>
@@ -125,51 +125,50 @@
         </main>
     </div>
 
-    <!-- Client Details Modal (The Improved End) -->
+    <!-- Details Modal -->
     <div id="modal-details" class="modal">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
                 <div id="det-header"></div>
                 <button class="btn btn-secondary" onclick="app.hideModals()">Close</button>
             </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;">
                 <div>
-                    <h3>Timeline & Updates</h3>
-                    <div style="margin: 1rem 0; display: flex; gap: 0.5rem;">
-                        <input type="text" id="det-note" placeholder="Quick Session Note...">
+                    <h3 style="margin-bottom: 1.5rem;">Activity Timeline</h3>
+                    <div style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem;">
+                        <input type="text" id="det-note" placeholder="Log session note...">
                         <button class="btn btn-primary" onclick="app.addDetNote()">Post</button>
                     </div>
                     <div id="det-timeline" class="timeline"></div>
                 </div>
                 <div>
-                    <h3>Pending Tasks</h3>
-                    <div style="margin: 1rem 0; display: flex; gap: 0.5rem;">
-                        <input type="text" id="det-task" placeholder="Assign Homework...">
-                        <button class="btn btn-secondary" onclick="app.addDetTask()">Assign</button>
+                    <h3 style="margin-bottom: 1.5rem;">Action Items</h3>
+                    <div style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem;">
+                        <input type="text" id="det-task" placeholder="Assign homework...">
+                        <button class="btn btn-secondary" onclick="app.addDetTask()">Add</button>
                     </div>
                     <div id="det-tasks"></div>
                     
-                    <div class="card" style="margin-top: 2rem;">
-                        <h3>Account Settings</h3>
-                        <div class="form-group" style="margin-top: 1rem;"><label>Sector</label><input type="text" id="det-industry"></div>
+                    <div class="card" style="margin-top: 2.5rem; background: #f8fafc;">
+                        <h3>Client Settings</h3>
+                        <div class="form-group" style="margin-top: 1rem;"><label>Industry</label><input type="text" id="det-industry"></div>
                         <div class="form-group"><label>Portal Password</label><input type="text" id="det-pass"></div>
-                        <button class="btn btn-primary" style="width: 100%;" onclick="app.updateDetClient()">Save Changes</button>
+                        <button class="btn btn-primary" style="width: 100%;" onclick="app.updateDetClient()">Update Client</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- New Client Modal -->
+    <!-- Add Client Modal -->
     <div id="modal-add-client" class="modal">
         <div class="modal-content" style="max-width: 450px;">
-            <h2>Onboard New Client</h2>
+            <h2>Quick Onboard</h2>
             <form onsubmit="app.saveNewClient(event)">
                 <div class="form-group"><label>Name</label><input type="text" id="n-name" required></div>
                 <div class="form-group"><label>Sector</label><input type="text" id="n-industry" required></div>
                 <div class="form-group"><label>Phone</label><input type="text" id="n-phone" required></div>
-                <div class="form-group"><label>Initial Status</label><select id="n-status"><option value="Lead">Lead</option><option value="Onboarded">Onboarded</option></select></div>
+                <div class="form-group"><label>Status</label><select id="n-status"><option value="Lead">Lead</option><option value="Onboarded">Onboarded</option></select></div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
                 <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="app.hideModals()">Cancel</button>
             </form>
@@ -194,7 +193,6 @@
                 this.state.role = role;
                 document.getElementById('gate-options').style.display = 'none';
                 document.getElementById('gate-login').style.display = 'block';
-                document.getElementById('gate-title').innerText = role === 'coach' ? 'Coach Access' : 'Client Access';
                 if(role === 'client') document.getElementById('cl-fields').style.display = 'block';
             },
 
@@ -255,13 +253,12 @@
                 this.hideModals(); this.loadData();
             },
 
-            // The Improved Details Logic
             showDetails(id) {
                 this.state.activeId = id;
                 const c = this.state.clients.find(x => x.id == id);
                 document.getElementById('det-header').innerHTML = `
-                    <h2 style="font-size: 2rem;">${c.name}</h2>
-                    <p style="color: var(--text-muted);">${c.phone}</p>
+                    <h2 style="font-size: 2.2rem;">${c.name}</h2>
+                    <p style="color: var(--text-muted); font-weight: 500;">${c.industry} • ${c.phone}</p>
                 `;
                 document.getElementById('det-industry').value = c.industry;
                 document.getElementById('det-pass').value = c.password;
@@ -270,20 +267,19 @@
             },
 
             renderDetailsUI(c) {
-                const timeline = document.getElementById('det-timeline');
-                timeline.innerHTML = (c.history || []).map(h => `
+                document.getElementById('det-timeline').innerHTML = (c.history || []).map(h => `
                     <div class="timeline-item">
-                        <div style="font-size: 0.75rem; color: var(--accent-blue); font-weight: 700;">${new Date(h.date).toLocaleDateString()}</div>
-                        <p style="background: #f8fafc; padding: 0.75rem; border-radius: 8px; margin-top: 0.25rem;">${h.note}</p>
+                        <div style="font-size: 0.75rem; color: var(--accent-blue); font-weight: 800;">${new Date(h.date).toLocaleDateString()}</div>
+                        <div class="feedback-card" style="margin-top: 0.5rem; ${h.from === 'Client' ? 'border-left-color: var(--accent-emerald);' : ''}">
+                            <p>${h.note}</p>
+                            <span class="badge ${h.from === 'Client' ? 'badge-feedback' : 'badge-session'}" style="margin-top: 0.5rem; display:inline-block;">${h.from}</span>
+                        </div>
                     </div>
                 `).join('');
-
-                const tasks = document.getElementById('det-tasks');
-                tasks.innerHTML = (c.tasks || []).map(t => `
-                    <div class="task-row ${t.status === 'done' ? 'done' : ''}">
+                document.getElementById('det-tasks').innerHTML = (c.tasks || []).map(t => `
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: #fff; border: 1px solid #eee; border-radius: 12px; margin-bottom: 0.5rem; ${t.status === 'done' ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
                         <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="app.toggleDetTask(${t.id})">
-                        <span style="flex: 1;">${t.title}</span>
-                        <button onclick="app.deleteDetTask(${t.id})" style="border:none; background:none; color:red; cursor:pointer;"><i data-lucide="trash" style="width:14px;"></i></button>
+                        <span style="flex: 1; font-weight: 600;">${t.title}</span>
                     </div>
                 `).join('');
                 lucide.createIcons();
@@ -294,11 +290,10 @@
                 if (!note) return;
                 const c = this.state.clients.find(x => x.id == this.state.activeId);
                 const history = c.history || [];
-                history.unshift({ date: new Date().toISOString(), note, type: 'Session', from: 'Coach' });
+                history.unshift({ date: new Date().toISOString(), note, type: 'Update', from: 'Coach' });
                 await sb.from('clients').update({ history }).eq('id', c.id);
                 document.getElementById('det-note').value = '';
-                this.loadData();
-                this.showDetails(c.id);
+                this.loadData(); this.showDetails(c.id);
             },
 
             async addDetTask() {
@@ -309,24 +304,22 @@
                 tasks.unshift({ id: Date.now(), title, status: 'pending' });
                 await sb.from('clients').update({ tasks }).eq('id', c.id);
                 document.getElementById('det-task').value = '';
-                this.loadData();
-                this.showDetails(c.id);
+                this.loadData(); this.showDetails(c.id);
             },
 
             async toggleDetTask(tid) {
                 const c = this.state.clients.find(x => x.id == this.state.activeId);
                 const tasks = c.tasks.map(t => t.id === tid ? {...t, status: t.status === 'done' ? 'pending' : 'done'} : t);
                 await sb.from('clients').update({ tasks }).eq('id', c.id);
-                this.loadData();
-                this.showDetails(c.id);
+                this.loadData(); this.showDetails(c.id);
             },
 
             async updateDetClient() {
-                const industry = document.getElementById('det-industry').value;
-                const password = document.getElementById('det-pass').value;
-                await sb.from('clients').update({ industry, password }).eq('id', this.state.activeId);
-                this.loadData();
-                alert("Settings Updated!");
+                await sb.from('clients').update({ 
+                    industry: document.getElementById('det-industry').value, 
+                    password: document.getElementById('det-pass').value 
+                }).eq('id', this.state.activeId);
+                this.loadData(); alert("Updated!");
             },
 
             render() {
@@ -335,6 +328,7 @@
                 
                 if (this.state.view === 'dashboard') this.renderDashboard(el);
                 if (this.state.view === 'clients') this.renderDirectory(el);
+                if (this.state.view === 'feedback') this.renderFeedback(el);
                 if (this.state.view === 'reports') this.renderReports(el);
                 lucide.createIcons();
             },
@@ -346,7 +340,7 @@
                     <h1 style="margin-bottom: 2rem;">Overview</h1>
                     <div class="stat-grid">
                         <div class="card"><h3>${this.state.clients.length}</h3><p>Total Database</p></div>
-                        <div class="card"><h3 style="color: var(--accent-blue)">${leads}</h3><p>Active Leads</p></div>
+                        <div class="card"><h3 style="color: var(--accent-blue)">${leads}</h3><p>Leads</p></div>
                         <div class="card"><h3 style="color: var(--accent-emerald)">${onboarded}</h3><p>Onboarded</p></div>
                     </div>
                     <h2>Quick Links</h2>
@@ -358,15 +352,33 @@
                 el.innerHTML = `<h1>Full Directory</h1><div class="client-grid" style="margin-top: 2rem;">${this.state.clients.map(c => this.cardTpl(c)).join('')}</div>`;
             },
 
+            renderFeedback(el) {
+                const feedbacks = this.state.clients.flatMap(c => (c.history || []).filter(h => h.from === 'Client').map(h => ({...h, clientName: c.name, clientId: c.id})));
+                el.innerHTML = `
+                    <h1 style="margin-bottom: 2rem;">Client Feedback Inbox</h1>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        ${feedbacks.length ? feedbacks.map(f => `
+                            <div class="card feedback-card" onclick="app.showDetails(${f.clientId})" style="cursor:pointer;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                    <b style="color: var(--accent-blue);">${f.clientName}</b>
+                                    <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(f.date).toLocaleString()}</span>
+                                </div>
+                                <p>${f.note}</p>
+                            </div>
+                        `).join('') : '<p>No feedback received yet.</p>'}
+                    </div>
+                `;
+            },
+
             renderReports(el) {
                 el.innerHTML = `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
                         <h1>Activity Log</h1>
-                        <button class="btn btn-primary" onclick="window.print()">Export Log</button>
+                        <button class="btn btn-primary" onclick="window.print()">Export</button>
                     </div>
                     <div class="card">
                         <table style="width: 100%; text-align: left;">
-                            <tr style="border-bottom: 2px solid #eee;"><th style="padding: 1rem;">Client</th><th style="padding: 1rem;">Update</th><th style="padding: 1rem;">Date</th></tr>
+                            <tr style="border-bottom: 2px solid #eee;"><th style="padding: 1rem;">Client</th><th style="padding: 1rem;">Note</th><th style="padding: 1rem;">Date</th></tr>
                             ${this.state.clients.flatMap(c => (c.history || []).map(h => `
                                 <tr style="border-bottom: 1px solid #f1f5f9;">
                                     <td style="padding: 1rem;"><b>${c.name}</b></td>
@@ -384,15 +396,20 @@
                 el.innerHTML = `
                     <div style="background: var(--accent-red); padding: 5rem 3rem; color: white; margin: -3rem -3rem 3rem -3rem;">
                         <h1>Welcome, ${c.name}</h1>
-                        <p>Quest Spark | Official Coaching Portal</p>
+                        <p>Quest Spark Official Portal</p>
                     </div>
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
                         <div>
                             <div class="card">
-                                <h3>Your Journey Timeline</h3>
+                                <h3>Send Feedback</h3>
+                                <textarea id="cl-fback" rows="3" style="margin: 1rem 0;" placeholder="Tell your coach how it's going..."></textarea>
+                                <button class="btn btn-primary" style="width:100%;" onclick="app.postClientFeedback()">Submit Update</button>
+                            </div>
+                            <div class="card">
+                                <h3>Timeline</h3>
                                 <div class="timeline" style="margin-top: 1.5rem;">${(c.history || []).map(h => `
                                     <div class="timeline-item">
-                                        <div style="font-size: 0.75rem; color: var(--accent-blue); font-weight: 700;">${new Date(h.date).toLocaleDateString()}</div>
+                                        <div style="font-size: 0.75rem; color: var(--accent-blue); font-weight: 800;">${new Date(h.date).toLocaleDateString()}</div>
                                         <p style="margin-top: 0.5rem;">${h.note}</p>
                                     </div>
                                 `).join('')}</div>
@@ -400,11 +417,11 @@
                         </div>
                         <div>
                             <div class="card">
-                                <h3>Homework Checklist</h3>
+                                <h3>Homework</h3>
                                 <div style="margin-top: 1rem;">${(c.tasks || []).map(t => `
-                                    <div class="task-row ${t.status === 'done' ? 'done' : ''}">
+                                    <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem; background: #fff; border: 1px solid #eee; border-radius: 12px; margin-bottom: 0.5rem; ${t.status === 'done' ? 'opacity: 0.5;' : ''}">
                                         <i data-lucide="${t.status === 'done' ? 'check-circle' : 'circle'}"></i>
-                                        <span>${t.title}</span>
+                                        <span style="font-weight: 600;">${t.title}</span>
                                     </div>
                                 `).join('')}</div>
                             </div>
@@ -414,12 +431,22 @@
                 `;
             },
 
+            async postClientFeedback() {
+                const note = document.getElementById('cl-fback').value;
+                if (!note) return;
+                const history = this.state.user.history || [];
+                history.unshift({ date: new Date().toISOString(), note, type: 'Feedback', from: 'Client' });
+                await sb.from('clients').update({ history }).eq('id', this.state.user.id);
+                document.getElementById('cl-fback').value = '';
+                this.loadData();
+            },
+
             cardTpl(c) {
                 return `
                     <div class="card client-card" onclick="app.showDetails(${c.id})">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                            <span class="badge ${c.status === 'Lead' ? 'badge-feedback' : 'badge-session'}">${c.status}</span>
-                            <i data-lucide="external-link" style="width: 16px; color: var(--text-muted);"></i>
+                            <span class="badge ${c.status === 'Lead' ? 'badge-blue' : 'badge-emerald'}">${c.status}</span>
+                            <i data-lucide="chevron-right" style="width: 16px; color: var(--text-muted);"></i>
                         </div>
                         <h3>${c.name}</h3>
                         <p style="color: var(--text-muted); font-size: 0.8rem;">${c.industry}</p>
