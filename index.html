@@ -70,7 +70,7 @@
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
         .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
         .client-card { transition: all 0.3s; cursor: pointer; border: 1px solid #f1f5f9; }
-        .client-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(14, 165, 233, 0.1); border-color: var(--sky-blue); }
+        .client-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(14, 165, 233, 0.2); border-color: var(--sky-blue); }
 
         .btn { padding: 0.9rem 1.75rem; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.75rem; font-family: inherit; font-size: 0.9rem; }
         .btn-primary { background: var(--accent-red); color: white; box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.39); }
@@ -318,8 +318,8 @@
             },
             hideModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
             showAddClient() { this.hideModals(); document.getElementById('modal-add-client').classList.add('active'); },
-            async saveNewClient(event) {
-                event.preventDefault();
+            async saveNewClient(e) {
+                e.preventDefault();
                 app.toggleLoader(true, "Initializing Profile...");
                 await sb.from('clients').insert({
                     name: document.getElementById('n-name').value,
@@ -362,8 +362,8 @@
                 `).join('');
                 lucide.createIcons();
             },
-            async uploadFile(event, isCoach = false) {
-                const file = event.target.files[0];
+            async uploadFile(e, isCoach = false) {
+                const file = e.target.files[0];
                 if (!file) return;
                 app.toggleLoader(true, "Securing Resource...");
                 const targetId = isCoach ? this.state.activeId : this.state.user.id;
@@ -413,39 +413,38 @@
                 if (this.state.view === 'feedback') this.renderFeedback(el);
                 lucide.createIcons();
             },
-            renderDashboard(el) {
+            getInstallUI() {
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                let installUI = '';
-
                 if (this.state.deferredPrompt) {
-                    installUI = `
-                        <div class="card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none;">
-                            <i data-lucide="smartphone" style="margin-bottom: 1rem; color: white;"></i>
-                            <h3>QS App Experience</h3>
-                            <p style="opacity: 0.9; margin: 0.5rem 0 1.5rem 0; font-size: 0.85rem;">Install QS on your home screen for a seamless mobile experience.</p>
-                            <button class="btn" style="background: white; color: var(--sky-blue-deep); width: 100%; justify-content: center;" onclick="app.installApp()">Install App Now</button>
+                    return `
+                        <div class="card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; margin-bottom: 2.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;">
+                                <div>
+                                    <h3 style="color: white; font-size: 1.25rem;">QS App Experience</h3>
+                                    <p style="opacity: 0.9; font-size: 0.85rem; margin-top: 0.25rem;">Install QS on your home screen for instant access.</p>
+                                </div>
+                                <button class="btn" style="background: white; color: var(--sky-blue-deep); min-width: 140px; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onclick="app.installApp()">Install Now</button>
+                            </div>
                         </div>
                     `;
                 } else if (isIOS) {
-                    installUI = `
-                        <div class="card" style="background: #f0f9ff; border: 2px dashed var(--sky-blue);">
-                            <i data-lucide="apple" style="margin-bottom: 1rem; color: var(--sky-blue);"></i>
-                            <h3>Install on iPhone</h3>
-                            <p style="color: var(--text-muted); margin: 0.5rem 0 1.5rem 0; font-size: 0.85rem;">Tap <b>Share</b> <i data-lucide="share" style="width:14px; display:inline;"></i> then <b>"Add to Home Screen"</b> to use QS as a full app.</p>
-                            <button class="btn btn-sky" style="width: 100%; justify-content: center; opacity: 0.6; cursor: default;">iOS Manual Install</button>
-                        </div>
-                    `;
-                } else {
-                    installUI = `
-                        <div class="card" style="background: #f8fafc; border: 1px solid var(--border);">
-                            <i data-lucide="monitor-smartphone" style="margin-bottom: 1rem; color: var(--text-muted);"></i>
-                            <h3>App Ready</h3>
-                            <p style="color: var(--text-muted); margin: 0.5rem 0 1.5rem 0; font-size: 0.85rem;">QS is optimized for all devices. Add it to your home screen via browser settings.</p>
+                    return `
+                        <div class="card" style="background: #f0f9ff; border: 2px dashed var(--sky-blue); margin-bottom: 2.5rem;">
+                            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                                <div style="background: var(--sky-blue); padding: 0.75rem; border-radius: 12px;"><i data-lucide="apple" style="color: white; width: 24px; height: 24px;"></i></div>
+                                <div>
+                                    <h3 style="color: var(--sky-blue-deep);">Install on iPhone</h3>
+                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Tap <b>Share</b> <i data-lucide="share" style="width:14px; display:inline;"></i> then <b>"Add to Home Screen"</b> to use QS as a full app.</p>
+                                </div>
+                            </div>
                         </div>
                     `;
                 }
-
+                return '';
+            },
+            renderDashboard(el) {
                 el.innerHTML = `
+                    ${this.getInstallUI()}
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3.5rem;">
                         <h1>QS Dashboard</h1>
                         <p style="font-weight: 700; color: var(--sky-blue-deep);">${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
@@ -453,7 +452,6 @@
                     <div class="stat-grid">
                         <div class="card" style="border-left: 6px solid var(--sky-blue);"><i data-lucide="users" style="color:var(--sky-blue); margin-bottom: 1rem;"></i><h3 style="font-size: 2.5rem;">${this.state.clients.length}</h3><p style="font-weight: 600; color: var(--text-muted);">Total Partners</p></div>
                         <div class="card" style="border-left: 6px solid var(--accent-red);"><i data-lucide="zap" style="color:var(--accent-red); margin-bottom: 1rem;"></i><h3 style="font-size: 2.5rem;">${this.state.clients.filter(c => c.status === 'Onboarded').length}</h3><p style="font-weight: 600; color: var(--text-muted);">Active Ecosystem</p></div>
-                        ${installUI}
                     </div>
                     <h2 style="margin-bottom: 2rem;">Quick Partner Access</h2>
                     <div class="client-grid">${this.state.clients.slice(0, 6).map(c => this.cardTpl(c)).join('')}</div>
@@ -479,6 +477,7 @@
                         <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; font-family: 'Outfit';">Welcome, ${c.name}</h1>
                         <p style="font-weight: 700; letter-spacing: 2px; opacity: 0.9;">OFFICIAL QS ECOSYSTEM ACCESS</p>
                     </div>
+                    ${this.getInstallUI()}
                     <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 4rem;">
                         <div>
                             <div class="card">
@@ -507,6 +506,7 @@
                         </div>
                     </div>
                 `;
+                lucide.createIcons();
             },
             async postClientNote() {
                 const note = document.getElementById('cl-note').value;
