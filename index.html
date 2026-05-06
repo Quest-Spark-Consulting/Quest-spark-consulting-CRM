@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QS | Excellence in Coaching</title>
+    <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js');
+            });
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap');
         
@@ -215,8 +223,8 @@
                 document.getElementById('gate-login').style.display = 'block';
                 if(role === 'client') document.getElementById('client-fields').style.display = 'block';
             },
-            async handleAuth(e) {
-                e.preventDefault();
+            async handleAuth(event) {
+                event.preventDefault();
                 app.toggleLoader(true, "Empowering dreams...");
                 const pass = document.getElementById('g-pass').value;
                 if (this.state.role === 'coach') {
@@ -262,8 +270,8 @@
             },
             hideModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
             showAddClient() { this.hideModals(); document.getElementById('modal-add-client').classList.add('active'); },
-            async saveNewClient(e) {
-                e.preventDefault();
+            async saveNewClient(event) {
+                event.preventDefault();
                 app.toggleLoader(true, "Initializing Profile...");
                 await sb.from('clients').insert({
                     name: document.getElementById('n-name').value,
@@ -306,8 +314,8 @@
                 `).join('');
                 lucide.createIcons();
             },
-            async uploadFile(e, isCoach = false) {
-                const file = e.target.files[0];
+            async uploadFile(event, isCoach = false) {
+                const file = event.target.files[0];
                 if (!file) return;
                 app.toggleLoader(true, "Securing Resource...");
                 const targetId = isCoach ? this.state.activeId : this.state.user.id;
@@ -329,7 +337,7 @@
                 const tasks = c.tasks || [];
                 tasks.unshift({ id: Date.now(), title, status: 'pending' });
                 await sb.from('clients').update({ tasks }).eq('id', c.id);
-                document.getElementById('task-input').value = ''; 
+                document.getElementById('det-task').value = ''; 
                 await this.loadData(); this.showDetails(c.id);
             },
             async toggleTask(tid) {
