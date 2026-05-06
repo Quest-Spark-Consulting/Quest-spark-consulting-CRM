@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest Spark | Professional Coaching CRM</title>
+    <title>Quest Spark | Collaborative Coaching CRM</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -22,7 +22,7 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-dark); min-height: 100vh; line-height: 1.6; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-dark); min-height: 100vh; line-height: 1.6; }
         h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 700; }
 
         /* Auth Gate */
@@ -30,14 +30,8 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             display: flex; align-items: center; justify-content: center; z-index: 2000;
-            transition: opacity 0.5s ease;
         }
-        .gate-card { 
-            background: white; padding: 3rem; border-radius: 32px; 
-            width: 100%; max-width: 450px; text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.3);
-        }
+        .gate-card { background: white; padding: 3rem; border-radius: 32px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); }
 
         /* Layout */
         #app { display: none; min-height: 100vh; }
@@ -50,133 +44,91 @@
         .nav-link:hover { background: #f8fafc; color: var(--text-dark); }
         .nav-link.active { background: #eff6ff; color: var(--accent-blue); }
 
-        /* Cards & UI */
-        .card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem; box-shadow: var(--shadow); }
+        /* Cards */
+        .card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
         .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-        
-        .client-card { position: relative; border-left: 5px solid transparent; transition: all 0.3s; }
-        .client-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+        .client-card { transition: all 0.3s; border-left: 5px solid transparent; }
+        .client-card:hover { transform: translateY(-4px); }
         .client-card.lead { border-color: var(--accent-blue); }
         .client-card.onboarded { border-color: var(--accent-emerald); }
 
-        .btn { padding: 0.75rem 1.5rem; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-family: inherit; }
+        /* Buttons */
+        .btn { padding: 0.75rem 1.5rem; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; font-family: inherit; font-size: 0.9rem; }
         .btn-primary { background: var(--accent-red); color: white; }
-        .btn-primary:hover { background: #6d1717; transform: scale(1.02); }
         .btn-secondary { background: #f1f5f9; color: var(--text-dark); }
-        .btn-secondary:hover { background: #e2e8f0; }
         .btn-wa { background: #25d366; color: white; text-decoration: none; justify-content: center; }
 
         /* Modals */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 3000; }
         .modal.active { display: flex; }
         .modal-content { background: white; padding: 2.5rem; border-radius: 28px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); }
-        
-        .form-group { margin-bottom: 1.25rem; text-align: left; }
+
+        .form-group { margin-bottom: 1.25rem; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-muted); }
-        input, select, textarea { width: 100%; padding: 0.85rem; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
-        input:focus { outline: none; border-color: var(--accent-blue); }
+        input, select, textarea { width: 100%; padding: 0.85rem; border: 1.5px solid #e2e8f0; border-radius: 12px; font-family: inherit; }
 
         /* Timeline */
         .timeline { border-left: 2px solid #e2e8f0; padding-left: 1.5rem; margin-left: 0.5rem; }
-        .timeline-item { margin-bottom: 2rem; position: relative; animation: slideIn 0.4s ease; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .timeline-item { margin-bottom: 2rem; position: relative; }
         .timeline-item::before { content: ''; width: 12px; height: 12px; background: var(--accent-red); border-radius: 50%; position: absolute; left: -1.95rem; top: 0.4rem; border: 3px solid white; }
         .timeline-date { font-size: 0.75rem; color: var(--accent-blue); font-weight: 700; margin-bottom: 0.25rem; }
 
-        /* Loading */
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--accent-blue); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Tags */
+        .badge { padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        .badge-feedback { background: #fef3c7; color: #92400e; }
+        .badge-session { background: #dcfce7; color: #166534; }
+        .badge-file { background: #e0f2fe; color: #075985; }
 
         @media print {
             aside, .btn, .modal { display: none !important; }
             main { margin-left: 0 !important; padding: 0 !important; }
-            .card { border: 1px solid #ddd !important; box-shadow: none !important; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Professional Auth Gate -->
+    <!-- Auth Gate -->
     <div id="auth-gate">
         <div class="gate-card">
-            <div style="color: var(--accent-red); margin-bottom: 1.5rem;">
-                <i data-lucide="sparkles" style="width: 48px; height: 48px;"></i>
-            </div>
-            <h1 style="font-size: 2rem; margin-bottom: 0.5rem;">Quest Spark</h1>
-            <p style="color: var(--text-muted); margin-bottom: 2.5rem;">Choose your portal to begin</p>
-            
+            <h1 style="color: var(--accent-red); margin-bottom: 2rem;">Quest Spark</h1>
             <div id="gate-options" style="display: flex; flex-direction: column; gap: 1rem;">
-                <button class="btn btn-primary" onclick="app.prepCoachLogin()" style="justify-content: center; font-size: 1.1rem; padding: 1rem;">
-                    <i data-lucide="shield-check"></i> Coaching Portal
-                </button>
-                <button class="btn btn-secondary" onclick="app.prepClientLogin()" style="justify-content: center; font-size: 1.1rem; padding: 1rem;">
-                    <i data-lucide="user"></i> Client Journey
-                </button>
+                <button class="btn btn-primary" onclick="app.prepCoachLogin()" style="justify-content: center;">Coach Portal</button>
+                <button class="btn btn-secondary" onclick="app.prepClientLogin()" style="justify-content: center;">Client Portal</button>
             </div>
-
-            <!-- Portal Forms (Hidden initially) -->
-            <div id="coach-gate-form" style="display: none; animation: slideIn 0.3s ease;">
-                <h2 style="margin-bottom: 1.5rem;">Coach Unlock</h2>
+            <div id="coach-gate-form" style="display: none;">
+                <h3>Coach Access</h3>
                 <form onsubmit="app.handleCoachLogin(event)">
-                    <div class="form-group">
-                        <label>Master Password</label>
-                        <input type="password" id="g-coach-pass" placeholder="••••••••" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Enter Dashboard</button>
+                    <input type="password" id="g-coach-pass" placeholder="Enter Master Password" style="margin: 1.5rem 0;" required>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Unlock</button>
                     <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; justify-content: center;" onclick="app.resetGate()">Back</button>
                 </form>
             </div>
-
-            <div id="client-gate-form" style="display: none; animation: slideIn 0.3s ease;">
-                <h2 style="margin-bottom: 1.5rem;">Client Journey</h2>
+            <div id="client-gate-form" style="display: none;">
+                <h3>Client Access</h3>
                 <form onsubmit="app.handleClientLogin(event)">
-                    <div class="form-group">
-                        <label>Phone Number</label>
-                        <input type="text" id="g-client-phone" placeholder="07XXXXXXXX" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Access Password</label>
-                        <input type="password" id="g-client-pass" placeholder="••••" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">View My Progress</button>
+                    <input type="text" id="g-client-phone" placeholder="Phone Number" style="margin-top: 1.5rem;" required>
+                    <input type="password" id="g-client-pass" placeholder="Access Password" style="margin: 1rem 0;" required>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">View Journey</button>
                     <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; justify-content: center;" onclick="app.resetGate()">Back</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Set Password Modal (One-time) -->
-    <div id="modal-first-setup" class="modal">
-        <div class="modal-content">
-            <h2>Welcome, Coach!</h2>
-            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Set your master password to protect your client data.</p>
-            <form onsubmit="app.handleFirstSetup(event)">
-                <div class="form-group"><label>New Master Password</label><input type="password" id="setup-pass" required></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Secure Dashboard</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Main Application -->
+    <!-- Main App -->
     <div id="app">
         <aside>
-            <div class="logo">
-                <i data-lucide="sparkles"></i>
-                <span style="font-weight: 700;">Quest Spark</span>
-            </div>
-            <nav id="coach-nav">
+            <div class="logo"><b>Quest Spark</b></div>
+            <nav>
                 <a href="#" class="nav-link active" onclick="app.setView('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</a>
                 <a href="#" class="nav-link" onclick="app.setView('clients')"><i data-lucide="users"></i> Clients</a>
-                <a href="#" class="nav-link" onclick="app.setView('tasks')"><i data-lucide="check-square"></i> Tasks</a>
                 <a href="#" class="nav-link" onclick="app.setView('reports')"><i data-lucide="bar-chart-3"></i> Reports</a>
-                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #eee;">
+                <div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem;">
                     <button class="btn btn-primary" style="width: 100%;" onclick="app.showAddClient()">+ New Client</button>
                 </div>
             </nav>
-            <button class="btn btn-secondary" style="width: 100%; margin-top: auto;" onclick="location.reload()">
-                <i data-lucide="log-out"></i> Secure Logout
-            </button>
+            <button class="btn btn-secondary" style="width: 100%; margin-top: auto;" onclick="location.reload()">Logout</button>
         </aside>
         
         <main>
@@ -184,33 +136,31 @@
         </main>
     </div>
 
-    <!-- Client Modals (Add, Edit, Log) -->
+    <!-- Modals -->
     <div id="modal-client-form" class="modal">
         <div class="modal-content">
-            <h2 id="client-form-title">New Contact</h2>
+            <h2 id="client-form-title">Contact Info</h2>
             <form onsubmit="app.saveClient(event)">
                 <input type="hidden" id="f-id">
-                <div class="form-group"><label>Full Name</label><input type="text" id="f-name" required></div>
-                <div class="form-group"><label>Industry / Sector</label><input type="text" id="f-industry" required></div>
-                <div style="display: flex; gap: 1rem;">
-                    <div class="form-group" style="flex: 1;"><label>Status</label><select id="f-status"><option value="Lead">Lead</option><option value="Onboarded">Onboarded</option></select></div>
-                    <div class="form-group" style="flex: 1;"><label>Phone</label><input type="text" id="f-phone" required></div>
-                </div>
+                <div class="form-group"><label>Name</label><input type="text" id="f-name" required></div>
+                <div class="form-group"><label>Sector</label><input type="text" id="f-industry" required></div>
+                <div class="form-group"><label>Phone</label><input type="text" id="f-phone" required></div>
+                <div class="form-group"><label>Status</label><select id="f-status"><option value="Lead">Lead</option><option value="Onboarded">Onboarded</option></select></div>
                 <div class="form-group"><label>Portal Password</label><input type="text" id="f-password" value="1234" required></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Changes</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Save Client</button>
                 <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="app.hideModals()">Cancel</button>
             </form>
         </div>
     </div>
 
-    <div id="modal-log-session" class="modal">
+    <div id="modal-log-action" class="modal">
         <div class="modal-content">
-            <h2>Post Note</h2>
-            <form onsubmit="app.saveSession(event)">
-                <input type="hidden" id="s-client-id">
-                <div class="form-group"><label>Note / Update</label><textarea id="s-note" rows="4" required placeholder="Session details..."></textarea></div>
-                <div class="form-group"><label>Type</label><select id="s-type"><option value="Session">Session</option><option value="Feedback">Feedback</option><option value="Onboarding">Onboarding</option></select></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Post to Timeline</button>
+            <h2 id="log-action-title">Log Update</h2>
+            <form onsubmit="app.saveAction(event)">
+                <input type="hidden" id="l-client-id">
+                <div class="form-group"><label>Note</label><textarea id="l-note" rows="4" required></textarea></div>
+                <div class="form-group"><label>Type</label><select id="l-type"><option value="Session">Session</option><option value="Task">Assign Task</option><option value="Update">Coach Update</option></select></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Post Update</button>
                 <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="app.hideModals()">Cancel</button>
             </form>
         </div>
@@ -222,101 +172,74 @@
         const sb = supabase.createClient(SB_URL, SB_KEY);
 
         const app = {
-            state: { role: null, view: 'dashboard', clients: [], user: null, masterPass: null },
+            state: { role: null, view: 'dashboard', clients: [], user: null, masterPass: 'spark2024' },
             
             async init() {
                 lucide.createIcons();
-                // Check if a master password exists
-                const { data } = await sb.from('config').select('value').eq('key', 'master_password');
-                if (data && data.length > 0) this.state.masterPass = data[0].value;
+                const { data } = await sb.from('config').select('value').eq('key', 'master_password').maybeSingle();
+                if (data) this.state.masterPass = data.value;
             },
 
-            // Auth UI Logic
+            // Auth UI
             resetGate() {
                 document.getElementById('gate-options').style.display = 'flex';
                 document.getElementById('coach-gate-form').style.display = 'none';
                 document.getElementById('client-gate-form').style.display = 'none';
             },
             prepCoachLogin() {
-                if (!this.state.masterPass) {
-                    document.getElementById('modal-first-setup').classList.add('active');
-                } else {
-                    document.getElementById('gate-options').style.display = 'none';
-                    document.getElementById('coach-gate-form').style.display = 'block';
-                }
+                document.getElementById('gate-options').style.display = 'none';
+                document.getElementById('coach-gate-form').style.display = 'block';
             },
             prepClientLogin() {
                 document.getElementById('gate-options').style.display = 'none';
                 document.getElementById('client-gate-form').style.display = 'block';
             },
 
-            // Auth Action Logic
-            async handleFirstSetup(e) {
-                e.preventDefault();
-                const pass = document.getElementById('setup-pass').value;
-                await sb.from('config').upsert({ key: 'master_password', value: pass });
-                this.state.masterPass = pass;
-                this.state.role = 'coach';
-                this.unlockApp();
-            },
             async handleCoachLogin(e) {
                 e.preventDefault();
-                const input = document.getElementById('g-coach-pass').value;
-                if (input === this.state.masterPass || input === 'spark2024') {
+                const pass = document.getElementById('g-coach-pass').value;
+                if (pass === this.state.masterPass || pass === 'spark2024') {
                     this.state.role = 'coach';
-                    this.unlockApp();
-                } else alert("Access Denied: Invalid Master Password.");
+                    this.unlock();
+                } else alert("Invalid Password.");
             },
             async handleClientLogin(e) {
                 e.preventDefault();
                 const phone = document.getElementById('g-client-phone').value;
                 const pass = document.getElementById('g-client-pass').value;
-                const cleanPhone = phone.slice(-9);
-                const { data } = await sb.from('clients').select('*').ilike('phone', `%${cleanPhone}`).maybeSingle();
+                const { data } = await sb.from('clients').select('*').ilike('phone', `%${phone.slice(-9)}`).maybeSingle();
                 if (data && String(data.password) === String(pass)) {
                     this.state.role = 'client';
                     this.state.user = data;
-                    this.unlockApp();
-                } else alert("Invalid phone or password.");
+                    this.unlock();
+                } else alert("Access denied.");
             },
-
-            async unlockApp() {
-                document.getElementById('auth-gate').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('auth-gate').style.display = 'none';
-                    document.getElementById('app').style.display = 'flex';
-                    if (this.state.role === 'client') {
-                        document.querySelector('aside').style.display = 'none';
-                        document.querySelector('main').style.marginLeft = '0';
-                    }
-                    this.loadData();
-                }, 500);
+            unlock() {
+                document.getElementById('auth-gate').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                if (this.state.role === 'client') {
+                    document.querySelector('aside').style.display = 'none';
+                    document.querySelector('main').style.marginLeft = '0';
+                }
+                this.loadData();
             },
 
             async loadData() {
                 const { data } = await sb.from('clients').select('*').order('name');
                 this.state.clients = data || [];
+                if (this.state.role === 'client') {
+                    this.state.user = this.state.clients.find(c => c.id === this.state.user.id);
+                }
                 this.render();
             },
 
-            setView(view) {
-                this.state.view = view;
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                const links = Array.from(document.querySelectorAll('.nav-link'));
-                const activeLink = links.find(l => l.innerText.toLowerCase().includes(view));
-                if (activeLink) activeLink.classList.add('active');
-                this.render();
-            },
+            setView(v) { this.state.view = v; this.render(); },
+            hideModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
 
-            hideModals() {
-                document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-            },
-
-            // Client CRUD
+            // Actions
             showAddClient() {
                 document.getElementById('f-id').value = '';
                 document.getElementById('client-form').reset();
-                document.getElementById('client-form-title').innerText = "New Contact";
                 document.getElementById('modal-client-form').classList.add('active');
             },
             showEditClient(id) {
@@ -327,58 +250,73 @@
                 document.getElementById('f-phone').value = c.phone;
                 document.getElementById('f-status').value = c.status;
                 document.getElementById('f-password').value = c.password;
-                document.getElementById('client-form-title').innerText = "Update Contact";
                 document.getElementById('modal-client-form').classList.add('active');
             },
             async saveClient(e) {
                 e.preventDefault();
                 const id = document.getElementById('f-id').value;
-                const client = {
+                const obj = {
                     name: document.getElementById('f-name').value,
                     industry: document.getElementById('f-industry').value,
-                    status: document.getElementById('f-status').value,
                     phone: document.getElementById('f-phone').value,
-                    password: document.getElementById('f-password').value,
-                    history: id ? this.state.clients.find(x => x.id == id).history : [],
-                    tasks: id ? this.state.clients.find(x => x.id == id).tasks : []
+                    status: document.getElementById('f-status').value,
+                    password: document.getElementById('f-password').value
                 };
-                if (id) await sb.from('clients').update(client).eq('id', id);
-                else await sb.from('clients').insert(client);
-                this.hideModals();
-                this.loadData();
+                if (id) await sb.from('clients').update(obj).eq('id', id);
+                else await sb.from('clients').insert({...obj, history: [], tasks: [], files: []});
+                this.hideModals(); this.loadData();
             },
-            async deleteClient(id) {
-                if (confirm("Delete this contact permanently?")) {
-                    await sb.from('clients').delete().eq('id', id);
-                    this.loadData();
-                }
+            showLogAction(id) {
+                document.getElementById('l-client-id').value = id;
+                document.getElementById('l-note').value = '';
+                document.getElementById('modal-log-action').classList.add('active');
             },
-
-            // Session Logging
-            showLogSession(id) {
-                document.getElementById('s-client-id').value = id;
-                document.getElementById('s-note').value = '';
-                document.getElementById('modal-log-session').classList.add('active');
-            },
-            async saveSession(e) {
+            async saveAction(e) {
                 e.preventDefault();
-                const id = document.getElementById('s-client-id').value;
-                const client = this.state.clients.find(x => x.id == id);
-                const history = client.history || [];
-                history.unshift({ date: new Date().toISOString(), note: document.getElementById('s-note').value, type: document.getElementById('s-type').value });
+                const id = document.getElementById('l-client-id').value;
+                const type = document.getElementById('l-type').value;
+                const note = document.getElementById('l-note').value;
+                const c = this.state.clients.find(x => x.id == id);
+                const history = c.history || [];
+                history.unshift({ date: new Date().toISOString(), note, type, from: 'Coach' });
                 await sb.from('clients').update({ history }).eq('id', id);
-                this.hideModals();
+                this.hideModals(); this.loadData();
+            },
+
+            // Client Portal Logic
+            async postFeedback() {
+                const note = document.getElementById('cl-feedback').value;
+                if (!note) return;
+                const history = this.state.user.history || [];
+                history.unshift({ date: new Date().toISOString(), note, type: 'Feedback', from: 'Client' });
+                await sb.from('clients').update({ history }).eq('id', this.state.user.id);
+                document.getElementById('cl-feedback').value = '';
+                this.loadData();
+            },
+            async uploadFile(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const path = `quest-spark/${Date.now()}_${file.name}`;
+                const { data, error } = await sb.storage.from('assets').upload(path, file);
+                if (error) {
+                    alert("Bucket 'assets' not found. Please create it in Supabase.");
+                    return;
+                }
+                const url = sb.storage.from('assets').getPublicUrl(path).data.publicUrl;
+                const files = this.state.user.files || [];
+                files.unshift({ name: file.name, url, date: new Date().toISOString() });
+                const history = this.state.user.history || [];
+                history.unshift({ date: new Date().toISOString(), note: `Shared file: ${file.name}`, type: 'File', url, from: 'Client' });
+                await sb.from('clients').update({ files, history }).eq('id', this.state.user.id);
                 this.loadData();
             },
 
-            // Rendering
             render() {
                 const el = document.getElementById('view-content');
                 if (this.state.role === 'client') return this.renderClientPortal(el);
                 
                 if (this.state.view === 'dashboard') this.renderDashboard(el);
                 if (this.state.view === 'clients') this.renderClients(el);
-                if (this.state.view === 'tasks') this.renderTasks(el);
                 if (this.state.view === 'reports') this.renderReports(el);
                 lucide.createIcons();
             },
@@ -389,52 +327,34 @@
                 el.innerHTML = `
                     <h1 style="margin-bottom: 2rem;">Overview</h1>
                     <div class="stat-grid">
-                        <div class="card"><p style="color: var(--text-muted); font-size: 0.8rem;">CLIENTS</p><h2>${this.state.clients.length}</h2></div>
-                        <div class="card"><p style="color: var(--accent-blue); font-size: 0.8rem;">LEADS</p><h2>${leads}</h2></div>
-                        <div class="card"><p style="color: var(--accent-emerald); font-size: 0.8rem;">ONBOARDED</p><h2>${onboarded}</h2></div>
+                        <div class="card"><h3>${this.state.clients.length}</h3><p>Total Clients</p></div>
+                        <div class="card"><h3 style="color: var(--accent-blue)">${leads}</h3><p>Active Leads</p></div>
+                        <div class="card"><h3 style="color: var(--accent-emerald)">${onboarded}</h3><p>Onboarded</p></div>
                     </div>
-                    <h2 style="margin-bottom: 1.5rem;">Recent Activity</h2>
+                    <h2 style="margin-bottom: 1.5rem;">Collaboration Hub</h2>
                     <div class="client-grid">${this.state.clients.slice(0, 6).map(c => this.cardTpl(c)).join('')}</div>
                 `;
             },
 
             renderClients(el) {
-                el.innerHTML = `
-                    <h1 style="margin-bottom: 2rem;">Client Directory</h1>
-                    <div class="client-grid">${this.state.clients.map(c => this.cardTpl(c)).join('')}</div>
-                `;
-            },
-
-            renderTasks(el) {
-                const tasks = this.state.clients.flatMap(c => (c.tasks || []).map(t => ({...t, client: c.name})));
-                el.innerHTML = `
-                    <h1 style="margin-bottom: 2rem;">Upcoming Tasks</h1>
-                    <div class="card">
-                        ${tasks.length === 0 ? '<p style="text-align:center; padding: 3rem;">No active tasks.</p>' : `
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr style="text-align: left; border-bottom: 2px solid #f1f5f9;"><th style="padding: 1rem;">Task</th><th style="padding: 1rem;">Client</th><th style="padding: 1rem;">Due</th></tr>
-                                ${tasks.map(t => `<tr style="border-bottom: 1px solid #f8fafc;"><td style="padding: 1rem;">${t.title}</td><td style="padding: 1rem;">${t.client}</td><td style="padding: 1rem;">${new Date(t.due).toLocaleDateString()}</td></tr>`).join('')}
-                            </table>
-                        `}
-                    </div>
-                `;
+                el.innerHTML = `<h1>Directory</h1><div class="client-grid">${this.state.clients.map(c => this.cardTpl(c)).join('')}</div>`;
             },
 
             renderReports(el) {
                 el.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                        <h1>Global Reports</h1>
-                        <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer"></i> Generate PDF</button>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2rem;">
+                        <h1>Collaboration Log</h1>
+                        <button class="btn btn-primary" onclick="window.print()">Export PDF</button>
                     </div>
                     <div class="card">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr style="text-align: left; border-bottom: 2px solid #eee;"><th style="padding: 1rem;">Date</th><th style="padding: 1rem;">Client</th><th style="padding: 1rem;">Type</th><th style="padding: 1rem;">Note</th></tr>
+                        <table style="width: 100%; text-align: left;">
+                            <tr style="border-bottom: 2px solid #eee;"><th style="padding: 1rem;">Client</th><th style="padding: 1rem;">Update</th><th style="padding: 1rem;">From</th><th style="padding: 1rem;">Date</th></tr>
                             ${this.state.clients.flatMap(c => (c.history || []).map(h => `
-                                <tr style="border-bottom: 1px solid #f1f5f9;">
-                                    <td style="padding: 1rem; color: var(--accent-blue); font-weight: 600;">${new Date(h.date).toLocaleDateString()}</td>
-                                    <td style="padding: 1rem; font-weight: 700;">${c.name}</td>
-                                    <td style="padding: 1rem;">${h.type}</td>
-                                    <td style="padding: 1rem;">${h.note}</td>
+                                <tr style="border-bottom: 1px solid #f8fafc;">
+                                    <td style="padding: 1rem;"><b>${c.name}</b></td>
+                                    <td style="padding: 1rem;">${h.note} ${h.url ? `<br><a href="${h.url}" target="_blank" style="font-size: 0.7rem; color: var(--accent-blue);">[View Attachment]</a>` : ''}</td>
+                                    <td style="padding: 1rem;"><span class="badge ${h.from === 'Coach' ? 'badge-session' : 'badge-feedback'}">${h.from}</span></td>
+                                    <td style="padding: 1rem;">${new Date(h.date).toLocaleDateString()}</td>
                                 </tr>
                             `)).join('')}
                         </table>
@@ -445,29 +365,48 @@
             renderClientPortal(el) {
                 const c = this.state.user;
                 el.innerHTML = `
-                    <div style="background: linear-gradient(135deg, var(--accent-red), #6d1717); margin: -3rem -3rem 3rem -3rem; padding: 6rem 3rem; color: white;">
-                        <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; font-family: Outfit;">${c.name}</h1>
-                        <p style="font-size: 1.2rem; opacity: 0.8;">Your Coaching Timeline</p>
+                    <div style="background: var(--accent-red); padding: 5rem 3rem; color: white; margin: -3rem -3rem 3rem -3rem;">
+                        <h1>Welcome, ${c.name}</h1>
+                        <p>Your Private Coaching Workspace</p>
                     </div>
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
-                        <div class="card">
-                            <h2 style="margin-bottom: 2rem;">Progress History</h2>
-                            <div class="timeline">${(c.history || []).map(h => `
-                                <div class="timeline-item">
-                                    <div class="timeline-date">${new Date(h.date).toLocaleDateString()} • ${h.type}</div>
-                                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 16px; border: 1px solid #eef2f6;">${h.note}</div>
-                                </div>
-                            `).join('')}</div>
-                        </div>
                         <div>
-                            <div class="card" style="margin-bottom: 1.5rem; text-align: center;">
-                                <h3 style="margin-bottom: 1rem;">Coach Support</h3>
-                                <a href="https://wa.me/254711980306" target="_blank" class="btn btn-wa" style="width: 100%;"><i data-lucide="message-circle"></i> Chat Now</a>
+                            <div class="card">
+                                <h3>Share Feedback or Update</h3>
+                                <textarea id="cl-feedback" rows="3" style="margin: 1rem 0;" placeholder="What's on your mind?"></textarea>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <label class="btn btn-secondary" style="cursor: pointer;">
+                                        <i data-lucide="upload"></i> Upload Work
+                                        <input type="file" style="display: none;" onchange="app.uploadFile(event)">
+                                    </label>
+                                    <button class="btn btn-primary" onclick="app.postFeedback()">Post Update</button>
+                                </div>
                             </div>
                             <div class="card">
-                                <h3>Account Details</h3>
-                                <p style="font-size: 0.9rem; margin-top: 1rem;">Status: <b style="color: var(--accent-emerald);">${c.status}</b></p>
-                                <p style="font-size: 0.9rem;">Industry: <b>${c.industry}</b></p>
+                                <h3>Journey Timeline</h3>
+                                <div class="timeline" style="margin-top: 1.5rem;">${(c.history || []).map(h => `
+                                    <div class="timeline-item">
+                                        <div class="timeline-date">${new Date(h.date).toLocaleDateString()} • ${h.type}</div>
+                                        <div class="card" style="margin: 0.5rem 0; padding: 1rem; border-color: #eee;">
+                                            <p>${h.note}</p>
+                                            ${h.url ? `<a href="${h.url}" target="_blank" style="color: var(--accent-blue); font-size: 0.8rem; display: block; margin-top: 0.5rem;">📎 View Attached File</a>` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card">
+                                <h3>Quick Actions</h3>
+                                <a href="https://wa.me/254711980306" class="btn btn-wa" style="width: 100%; margin-top: 1rem;">Message Coach</a>
+                            </div>
+                            <div class="card">
+                                <h3>Shared Assets</h3>
+                                <div style="margin-top: 1rem;">${(c.files || []).map(f => `
+                                    <a href="${f.url}" target="_blank" style="display: block; padding: 0.5rem; border: 1px solid #eee; border-radius: 8px; margin-bottom: 0.5rem; text-decoration: none; color: inherit; font-size: 0.8rem;">
+                                        <i data-lucide="file-text" style="width: 14px; margin-right: 5px;"></i> ${f.name}
+                                    </a>
+                                `).join('')}</div>
                             </div>
                         </div>
                     </div>
@@ -477,18 +416,15 @@
             cardTpl(c) {
                 return `
                     <div class="card client-card ${c.status.toLowerCase()}">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                            <span style="font-size: 0.7rem; font-weight: 800; color: ${c.status === 'Lead' ? 'var(--accent-blue)' : 'var(--accent-emerald)'}; text-transform: uppercase;">${c.status}</span>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button onclick="app.showEditClient(${c.id})" style="background:none; border:none; cursor:pointer; color:var(--text-muted);"><i data-lucide="edit-3" style="width: 16px;"></i></button>
-                                <button onclick="app.deleteClient(${c.id})" style="background:none; border:none; cursor:pointer; color:var(--accent-red);"><i data-lucide="trash-2" style="width: 16px;"></i></button>
-                            </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <span class="badge ${c.status === 'Lead' ? 'badge-file' : 'badge-session'}">${c.status}</span>
+                            <button onclick="app.showEditClient(${c.id})" style="background:none; border:none; cursor:pointer;"><i data-lucide="settings" style="width: 16px;"></i></button>
                         </div>
-                        <h3 style="margin-bottom: 0.25rem; font-size: 1.2rem;">${c.name}</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">${c.industry}</p>
-                        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                            <button class="btn btn-primary" onclick="app.showLogSession(${c.id})" style="width: 100%; justify-content: center;"><i data-lucide="plus-circle" style="width:16px;"></i> Log Note</button>
-                            <a href="https://wa.me/254${c.phone.slice(-9)}" target="_blank" class="btn btn-wa"><i data-lucide="message-circle" style="width:16px;"></i> WhatsApp</a>
+                        <h3>${c.name}</h3>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem;">${c.industry}</p>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <button class="btn btn-primary" onclick="app.showLogAction(${c.id})">Post Update</button>
+                            <a href="https://wa.me/254${c.phone.slice(-9)}" class="btn btn-wa" target="_blank">WhatsApp</a>
                         </div>
                     </div>
                 `;
