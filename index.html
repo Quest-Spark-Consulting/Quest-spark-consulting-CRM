@@ -192,7 +192,7 @@
     <div id="modal-add-client" class="modal">
         <div class="modal-content" style="max-width: 480px;">
             <h2 style="font-size: 2rem;">QS Onboarding</h2>
-            <form onsubmit="app.saveNewClient(event)" style="margin-top: 2rem;">
+            <form onsubmit="app.saveNewClient(e)" style="margin-top: 2rem;">
                 <div style="margin-bottom: 1.25rem;"><label style="font-size: 0.8rem; font-weight: 700;">Full Name</label><input type="text" id="n-name" required></div>
                 <div style="margin-bottom: 1.25rem;"><label style="font-size: 0.8rem; font-weight: 700;">Phone</label><input type="text" id="n-phone" required></div>
                 <div style="margin-bottom: 2rem;"><label style="font-size: 0.8rem; font-weight: 700;">Partnership Status</label><select id="n-status"><option value="Lead">Potential Lead</option><option value="Onboarded">Active Partner</option></select></div>
@@ -417,30 +417,37 @@
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (this.state.deferredPrompt) {
                     return `
-                        <div class="card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; margin-bottom: 2.5rem;">
+                        <div class="card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; margin-bottom: 2.5rem; box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.4);">
                             <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem;">
                                 <div>
-                                    <h3 style="color: white; font-size: 1.25rem;">QS App Experience</h3>
-                                    <p style="opacity: 0.9; font-size: 0.85rem; margin-top: 0.25rem;">Install QS on your home screen for instant access.</p>
+                                    <h3 style="color: white; font-size: 1.25rem;">🚀 Install QS App</h3>
+                                    <p style="opacity: 0.9; font-size: 0.85rem; margin-top: 0.25rem;">Add QS to your home screen for a premium experience.</p>
                                 </div>
-                                <button class="btn" style="background: white; color: var(--sky-blue-deep); min-width: 140px; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onclick="app.installApp()">Install Now</button>
+                                <button class="btn" style="background: white; color: var(--sky-blue-deep); min-width: 140px; justify-content: center;" onclick="app.installApp()">Install Now</button>
                             </div>
                         </div>
                     `;
                 } else if (isIOS) {
                     return `
-                        <div class="card" style="background: #f0f9ff; border: 2px dashed var(--sky-blue); margin-bottom: 2.5rem;">
+                        <div class="card" style="background: white; border: 2px solid var(--sky-blue); margin-bottom: 2.5rem;">
                             <div style="display: flex; gap: 1.5rem; align-items: center;">
-                                <div style="background: var(--sky-blue); padding: 0.75rem; border-radius: 12px;"><i data-lucide="apple" style="color: white; width: 24px; height: 24px;"></i></div>
+                                <div style="background: #f0f9ff; padding: 0.75rem; border-radius: 12px;"><i data-lucide="apple" style="color: var(--sky-blue); width: 24px; height: 24px;"></i></div>
                                 <div>
-                                    <h3 style="color: var(--sky-blue-deep);">Install on iPhone</h3>
-                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Tap <b>Share</b> <i data-lucide="share" style="width:14px; display:inline;"></i> then <b>"Add to Home Screen"</b> to use QS as a full app.</p>
+                                    <h3 style="color: var(--sky-blue-deep);">iPhone App Setup</h3>
+                                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Tap <b>Share</b> <i data-lucide="share" style="width:14px; display:inline;"></i> then <b>"Add to Home Screen"</b> to install.</p>
                                 </div>
                             </div>
                         </div>
                     `;
                 }
-                return '';
+                return `
+                    <div class="card" style="background: #f8fafc; border: 1px dashed var(--border); margin-bottom: 2.5rem; opacity: 0.8;">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <i data-lucide="smartphone" style="color: var(--text-muted);"></i>
+                            <p style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">App Mode Ready: Check browser menu to "Install" or "Add to Home Screen".</p>
+                        </div>
+                    </div>
+                `;
             },
             renderDashboard(el) {
                 el.innerHTML = `
@@ -473,18 +480,22 @@
             renderClientPortal(el) {
                 const c = this.state.user;
                 el.innerHTML = `
-                    <div style="background: linear-gradient(135deg, var(--sky-blue), var(--sky-blue-deep)); padding: 7rem 5rem; color: white; margin: -3rem -3rem 5rem -3rem; border-radius: 0 0 50px 50px; box-shadow: 0 20px 40px rgba(14, 165, 233, 0.2);">
+                    <div style="background: linear-gradient(135deg, var(--sky-blue), var(--sky-blue-deep)); padding: 7rem 5rem; color: white; margin: -3rem -3rem 4rem -3rem; border-radius: 0 0 50px 50px; box-shadow: 0 20px 40px rgba(14, 165, 233, 0.2); position: relative; z-index: 1;">
                         <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; font-family: 'Outfit';">Welcome, ${c.name}</h1>
                         <p style="font-weight: 700; letter-spacing: 2px; opacity: 0.9;">OFFICIAL QS ECOSYSTEM ACCESS</p>
                     </div>
-                    ${this.getInstallUI()}
+                    
+                    <div style="position: relative; z-index: 2; margin-top: -2rem;">
+                        ${this.getInstallUI()}
+                    </div>
+
                     <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 4rem;">
                         <div>
                             <div class="card">
                                 <h3 style="margin-bottom: 1.5rem;">QS Interaction Hub</h3>
                                 <textarea id="cl-note" rows="5" style="margin-bottom: 1.5rem;" placeholder="Share a breakthrough or update with QS..."></textarea>
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <label class="btn btn-secondary" style="cursor: pointer; background: white; border: 1.5px solid #f1f5f9;"><i data-lucide="paperclip"></i> Attach Resource<input type="file" style="display: none;" onchange="app.uploadFile(event, false)"></label>
+                                    <label class="btn btn-secondary" style="cursor: pointer; background: white; border: 1.5px solid #f1f5f9;"><i data-lucide="paperclip"></i> Attach Resource<input type="file" style="display: none;" onchange="app.uploadFile(e, false)"></label>
                                     <button class="btn btn-sky" onclick="app.postClientNote()">Post Update</button>
                                 </div>
                             </div>
