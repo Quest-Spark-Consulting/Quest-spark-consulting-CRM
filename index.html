@@ -207,9 +207,16 @@
         const sb = supabase.createClient(SB_URL, SB_KEY);
 
         const app = {
-            state: { role: null, view: 'dashboard', clients: [], user: null, activeId: null, masterPass: 'spark2024' },
+            state: { role: null, view: 'dashboard', clients: [], user: null, activeId: null, masterPass: 'spark2024', deferredPrompt: null },
             async init() {
                 lucide.createIcons();
+                
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.state.deferredPrompt = e;
+                    this.render(); // Re-render to show install button
+                });
+
                 const { data } = await sb.from('config').select('value').eq('key', 'master_password').maybeSingle();
                 if (data) this.state.masterPass = data.value;
                 setTimeout(() => {
@@ -217,6 +224,17 @@
                     document.getElementById('auth-gate').style.display = 'flex';
                 }, 1800);
             },
+            
+            async installApp() {
+                if (!this.state.deferredPrompt) return;
+                this.state.deferredPrompt.prompt();
+                const { outcome } = await this.state.deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    this.state.deferredPrompt = null;
+                    this.render();
+                }
+            },
+
             showLogin(role) {
                 this.state.role = role;
                 document.getElementById('gate-options').style.display = 'none';
@@ -366,6 +384,15 @@
                 lucide.createIcons();
             },
             renderDashboard(el) {
+                const installCard = this.state.deferredPrompt ? `
+                    <div class="card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none;">
+                        <i data-lucide="smartphone" style="margin-bottom: 1rem; color: white;"></i>
+                        <h3>QS App Experience</h3>
+                        <p style="opacity: 0.9; margin: 0.5rem 0 1.5rem 0; font-size: 0.85rem;">Install QS on your home screen for a seamless mobile experience.</p>
+                        <button class="btn" style="background: white; color: var(--sky-blue-deep); width: 100%; justify-content: center;" onclick="app.installApp()">Install App Now</button>
+                    </div>
+                ` : '';
+
                 el.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3.5rem;">
                         <h1>QS Dashboard</h1>
@@ -374,6 +401,7 @@
                     <div class="stat-grid">
                         <div class="card" style="border-left: 6px solid var(--sky-blue);"><i data-lucide="users" style="color:var(--sky-blue); margin-bottom: 1rem;"></i><h3 style="font-size: 2.5rem;">${this.state.clients.length}</h3><p style="font-weight: 600; color: var(--text-muted);">Total Partners</p></div>
                         <div class="card" style="border-left: 6px solid var(--accent-red);"><i data-lucide="zap" style="color:var(--accent-red); margin-bottom: 1rem;"></i><h3 style="font-size: 2.5rem;">${this.state.clients.filter(c => c.status === 'Onboarded').length}</h3><p style="font-weight: 600; color: var(--text-muted);">Active Ecosystem</p></div>
+                        ${installCard}
                     </div>
                     <h2 style="margin-bottom: 2rem;">Quick Partner Access</h2>
                     <div class="client-grid">${this.state.clients.slice(0, 6).map(c => this.cardTpl(c)).join('')}</div>
