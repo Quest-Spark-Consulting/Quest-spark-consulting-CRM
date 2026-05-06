@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quest Spark | Coaching CRM</title>
+    <title>QS | Excellence in Coaching</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -11,13 +11,12 @@
         
         :root {
             --bg-main: #f8fafc;
-            --accent-red: #8b1e1e;
-            --accent-blue: #0f172a;
+            --accent-red: #ef4444;
+            --accent-blue: #0f172a; /* Deep Navy */
             --text-dark: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-hover: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -34,27 +33,30 @@
         #loader.hidden { opacity: 0; pointer-events: none; }
         .spinner { width: 50px; height: 50px; border: 4px solid #f1f5f9; border-top: 4px solid var(--accent-red); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .spark-pulse { animation: pulse 1.5s infinite; color: var(--accent-red); }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.7; } }
 
         /* Auth Gate */
         #auth-gate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f8fafc; display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        .gate-card { background: white; padding: 3rem; border-radius: 24px; box-shadow: var(--shadow-hover); width: 100%; max-width: 420px; text-align: center; border: 1px solid var(--border); }
+        .gate-card { background: white; padding: 3rem; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border); }
 
         /* Sidebar */
         #app { display: none; min-height: 100vh; }
-        aside { width: 280px; background: white; border-right: 1px solid var(--border); padding: 2rem; position: fixed; height: 100vh; z-index: 100; }
-        main { flex: 1; margin-left: 280px; padding: 3rem; max-width: 1400px; }
+        aside { width: 260px; background: var(--accent-blue); padding: 2rem; position: fixed; height: 100vh; z-index: 100; color: white; }
+        main { flex: 1; margin-left: 260px; padding: 3rem; max-width: 1400px; }
 
-        .logo { color: var(--accent-red); font-size: 1.5rem; margin-bottom: 3rem; }
-        .nav-link { display: flex; align-items: center; gap: 1rem; padding: 0.9rem 1.2rem; color: var(--text-muted); text-decoration: none; border-radius: 12px; margin-bottom: 0.5rem; transition: all 0.2s; font-weight: 500; }
-        .nav-link:hover { background: #f8fafc; color: var(--text-dark); }
-        .nav-link.active { background: #fff1f1; color: var(--accent-red); }
+        .logo { display: flex; align-items: center; gap: 0.75rem; font-size: 2rem; margin-bottom: 3.5rem; color: white; font-family: 'Outfit'; }
+        .nav-link { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; color: rgba(255,255,255,0.6); text-decoration: none; border-radius: 12px; margin-bottom: 0.5rem; transition: all 0.2s; font-weight: 500; }
+        .nav-link:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-link.active { background: var(--accent-red); color: white; }
 
-        /* Cards & UI */
+        /* Cards */
         .card { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
         .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-        .client-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .client-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-hover); border-color: var(--accent-red); }
+        .client-card { transition: all 0.3s; cursor: pointer; }
+        .client-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border-color: var(--accent-red); }
 
         .btn { padding: 0.8rem 1.5rem; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.6rem; font-family: inherit; }
         .btn-primary { background: var(--accent-red); color: white; }
@@ -62,38 +64,36 @@
         .btn-wa { background: #25d366; color: white; text-decoration: none; justify-content: center; }
 
         /* Modals */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 3000; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 3000; }
         .modal.active { display: flex; }
-        .modal-content { background: white; padding: 3rem; border-radius: 28px; width: 95%; max-width: 950px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-hover); }
+        .modal-content { background: white; padding: 3rem; border-radius: 28px; width: 95%; max-width: 950px; max-height: 90vh; overflow-y: auto; }
 
-        input, select, textarea { width: 100%; padding: 0.9rem; border: 1px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+        input, select, textarea { width: 100%; padding: 0.9rem; border: 1px solid #e2e8f0; border-radius: 12px; font-family: inherit; outline: none; }
         input:focus { border-color: var(--accent-red); }
 
-        /* Assets */
-        .asset-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
-        .asset-item { border: 1px solid #f1f5f9; border-radius: 16px; padding: 0.75rem; text-align: center; text-decoration: none; transition: all 0.2s; }
-        .asset-item:hover { border-color: var(--accent-red); transform: scale(1.03); }
-        .asset-item img { width: 100%; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 0.5rem; }
-        .asset-name { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
-
-        .badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge { padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .badge-red { background: #fff1f1; color: var(--accent-red); }
         .badge-slate { background: #f1f5f9; color: #475569; }
 
-        @media (max-width: 1024px) { aside { width: 80px; padding: 1rem; } main { margin-left: 80px; } .nav-link span { display: none; } }
+        .asset-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
+        .asset-item { border: 1px solid #f1f5f9; border-radius: 16px; padding: 0.75rem; text-align: center; text-decoration: none; color: inherit; transition: 0.2s; }
+        .asset-item:hover { border-color: var(--accent-red); transform: scale(1.05); }
+        .asset-item img { width: 100%; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 0.5rem; }
     </style>
 </head>
 <body>
 
+    <!-- Loader -->
     <div id="loader">
         <div class="spinner"></div>
-        <h2 style="font-family: 'Outfit'; font-weight: 700; color: var(--accent-red);">Empowering dreams...</h2>
+        <h2 style="font-family: 'Outfit'; color: var(--accent-red);">QUEST SPARK</h2>
+        <p style="margin-top: 0.5rem; color: var(--text-muted); font-weight: 500;">Empowering dreams...</p>
     </div>
 
     <!-- Auth Gate -->
     <div id="auth-gate" style="display: none;">
         <div class="gate-card">
-            <h1 style="color: var(--accent-red); margin-bottom: 2rem;">Quest Spark</h1>
+            <h1 style="color: var(--accent-red); font-size: 3rem; margin-bottom: 2rem;">QS</h1>
             <div id="gate-options" style="display: flex; flex-direction: column; gap: 1rem;">
                 <button class="btn btn-primary" style="justify-content: center;" onclick="app.showLogin('coach')">Coach Portal</button>
                 <button class="btn btn-secondary" style="justify-content: center;" onclick="app.showLogin('client')">Client Portal</button>
@@ -103,27 +103,29 @@
                     <div id="client-fields" style="display: none;">
                         <input type="text" id="g-phone" placeholder="Phone Number" style="margin-bottom: 1rem;">
                     </div>
-                    <input type="password" id="g-pass" placeholder="Enter Password" style="margin-bottom: 1rem;" required>
-                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Sign In</button>
+                    <input type="password" id="g-pass" placeholder="Password" style="margin-bottom: 1rem;" required>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Enter QS</button>
                     <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; justify-content: center;" onclick="location.reload()">Back</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- App Content -->
     <div id="app">
         <aside>
-            <div class="logo"><b>Quest Spark</b></div>
+            <div class="logo">
+                <i data-lucide="zap" class="spark-pulse"></i>
+                <b>QS</b>
+            </div>
             <nav>
-                <a href="#" class="nav-link active" id="nav-dashboard" onclick="app.setView('dashboard')"><i data-lucide="layout-grid"></i> <span>Dashboard</span></a>
-                <a href="#" class="nav-link" id="nav-clients" onclick="app.setView('clients')"><i data-lucide="users-2"></i> <span>Directory</span></a>
-                <a href="#" class="nav-link" id="nav-feedback" onclick="app.setView('feedback')"><i data-lucide="inbox"></i> <span>Feedback Hub</span></a>
-                <div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem;">
-                    <button class="btn btn-primary" style="width: 100%;" onclick="app.showAddClient()">+ Onboard New</button>
+                <a href="#" class="nav-link active" id="nav-dashboard" onclick="app.setView('dashboard')"><i data-lucide="layout-grid"></i> Dashboard</a>
+                <a href="#" class="nav-link" id="nav-clients" onclick="app.setView('clients')"><i data-lucide="users"></i> Directory</a>
+                <a href="#" class="nav-link" id="nav-feedback" onclick="app.setView('feedback')"><i data-lucide="message-circle"></i> Feedback</a>
+                <div style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 3rem;">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="app.showAddClient()">+ New Client</button>
                 </div>
             </nav>
-            <button class="btn btn-secondary" style="width: 100%; margin-top: auto;" onclick="location.reload()">Sign Out</button>
+            <button class="btn btn-secondary" style="width: 100%; margin-top: auto; background: rgba(255,255,255,0.1); color: white;" onclick="location.reload()">Logout</button>
         </aside>
 
         <main>
@@ -131,46 +133,40 @@
         </main>
     </div>
 
-    <!-- Multi-Utility Details Modal -->
+    <!-- Modals -->
     <div id="modal-details" class="modal">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3rem;">
                 <div id="det-header"></div>
                 <button class="btn btn-secondary" onclick="app.hideModals()">Close</button>
             </div>
-            
             <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 4rem;">
                 <div>
-                    <h3 style="margin-bottom: 1.5rem;">Asset Sharing</h3>
-                    <div class="card" style="border-style: dashed; text-align: center;">
-                        <label style="cursor: pointer; display: block; padding: 1rem;">
-                            <i data-lucide="upload-cloud" style="width: 32px; height: 32px; color: var(--accent-red); margin-bottom: 0.5rem;"></i>
-                            <p style="font-weight: 600;">Click to share worksheets or images</p>
+                    <h3>QS Shared Vault</h3>
+                    <div class="card" style="border-style: dashed; text-align: center; margin-top: 1.5rem;">
+                        <label style="cursor: pointer; display: block; padding: 1.5rem;">
+                            <i data-lucide="plus-circle" style="color: var(--accent-red); margin-bottom: 0.5rem;"></i>
+                            <p>Share Resource</p>
                             <input type="file" style="display: none;" onchange="app.uploadFile(event, true)">
                         </label>
                     </div>
                     <div id="det-assets" class="asset-list" style="margin-top: 1.5rem;"></div>
-                    
-                    <h3 style="margin-top: 3rem; margin-bottom: 1.5rem;">Session Logs</h3>
-                    <div id="det-timeline" style="border-left: 2px solid #f1f5f9; padding-left: 2rem;"></div>
+                    <h3 style="margin-top: 3rem;">Journey Log</h3>
+                    <div id="det-timeline" style="margin-top: 1.5rem; border-left: 2px solid #f1f5f9; padding-left: 2rem;"></div>
                 </div>
                 <div>
-                    <h3 style="margin-bottom: 1.5rem;">Homework Status</h3>
-                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                        <input type="text" id="det-task" placeholder="Next action item...">
+                    <h3>Assigned Tasks</h3>
+                    <div style="display: flex; gap: 0.5rem; margin: 1.5rem 0;">
+                        <input type="text" id="det-task" placeholder="Next step...">
                         <button class="btn btn-primary" onclick="app.addTask()">Assign</button>
                     </div>
                     <div id="det-tasks"></div>
-                    
-                    <div class="card" style="margin-top: 3rem; background: #f8fafc; border-color: #e2e8f0;">
-                        <h3>Client Management</h3>
-                        <div style="margin-top: 1.5rem;">
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">Portal Access Password</label>
-                            <input type="text" id="det-pass" style="margin-bottom: 1rem;">
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button class="btn btn-primary" style="flex: 1;" onclick="app.updatePass()">Update Access</button>
-                                <button class="btn btn-secondary" style="background: #fee2e2; color: #991b1b;" onclick="app.deleteClient()">Archive</button>
-                            </div>
+                    <div class="card" style="margin-top: 3rem; background: #f8fafc;">
+                        <h3>Access Controls</h3>
+                        <div style="margin-top: 1rem;">
+                            <label style="font-size: 0.75rem; font-weight: 700;">Update Portal Password</label>
+                            <input type="text" id="det-pass" style="margin: 0.5rem 0;">
+                            <button class="btn btn-primary" style="width: 100%;" onclick="app.updatePass()">Save Access</button>
                         </div>
                     </div>
                 </div>
@@ -178,16 +174,14 @@
         </div>
     </div>
 
-    <!-- Onboard Modal -->
     <div id="modal-add-client" class="modal">
-        <div class="modal-content" style="max-width: 460px;">
-            <h2>Quick Onboarding</h2>
+        <div class="modal-content" style="max-width: 440px;">
+            <h2>QS Onboarding</h2>
             <form onsubmit="app.saveNewClient(event)" style="margin-top: 1.5rem;">
-                <div style="margin-bottom: 1rem;"><label style="font-size: 0.8rem; font-weight: 600;">Client Name</label><input type="text" id="n-name" required></div>
-                <div style="margin-bottom: 1rem;"><label style="font-size: 0.8rem; font-weight: 600;">Phone Number</label><input type="text" id="n-phone" required></div>
-                <div style="margin-bottom: 1.5rem;"><label style="font-size: 0.8rem; font-weight: 600;">Initial Status</label><select id="n-status"><option value="Lead">New Lead</option><option value="Onboarded">Active Client</option></select></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Initialize Account</button>
-                <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; justify-content: center;" onclick="app.hideModals()">Cancel</button>
+                <input type="text" id="n-name" placeholder="Name" required style="margin-bottom: 1rem;">
+                <input type="text" id="n-phone" placeholder="Phone" required style="margin-bottom: 1rem;">
+                <select id="n-status" style="margin-bottom: 1.5rem;"><option value="Lead">Lead</option><option value="Onboarded">Onboarded</option></select>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Create QS Profile</button>
             </form>
         </div>
     </div>
@@ -199,7 +193,6 @@
 
         const app = {
             state: { role: null, view: 'dashboard', clients: [], user: null, activeId: null, masterPass: 'spark2024' },
-            
             async init() {
                 lucide.createIcons();
                 const { data } = await sb.from('config').select('value').eq('key', 'master_password').maybeSingle();
@@ -209,37 +202,33 @@
                     document.getElementById('auth-gate').style.display = 'flex';
                 }, 1800);
             },
-
             showLogin(role) {
                 this.state.role = role;
                 document.getElementById('gate-options').style.display = 'none';
                 document.getElementById('gate-login').style.display = 'block';
                 if(role === 'client') document.getElementById('client-fields').style.display = 'block';
             },
-
             async handleAuth(e) {
                 e.preventDefault();
-                app.toggleLoader(true, "Authenticating...");
+                app.toggleLoader(true, "Empowering dreams...");
                 const pass = document.getElementById('g-pass').value;
                 if (this.state.role === 'coach') {
                     if (pass === this.state.masterPass || pass === 'spark2024') this.unlock();
-                    else { alert("Access Denied"); app.toggleLoader(false); }
+                    else { alert("Denied"); app.toggleLoader(false); }
                 } else {
                     const phone = document.getElementById('g-phone').value;
                     const { data } = await sb.from('clients').select('*').ilike('phone', `%${phone.slice(-9)}`).maybeSingle();
                     if (data && String(data.password) === String(pass)) {
                         this.state.user = data; this.unlock();
-                    } else { alert("User Not Found"); app.toggleLoader(false); }
+                    } else { alert("Not Found"); app.toggleLoader(false); }
                 }
             },
-
             toggleLoader(show, text = "Empowering dreams...") {
                 const l = document.getElementById('loader');
-                l.querySelector('h2').innerText = text;
+                l.querySelector('p').innerText = text;
                 if(show) l.classList.remove('hidden');
                 else l.classList.add('hidden');
             },
-
             unlock() {
                 document.getElementById('auth-gate').style.display = 'none';
                 document.getElementById('app').style.display = 'flex';
@@ -249,7 +238,6 @@
                 }
                 this.loadData();
             },
-
             async loadData() {
                 app.toggleLoader(true, "Syncing Command Center...");
                 const { data } = await sb.from('clients').select('*').order('name');
@@ -258,7 +246,6 @@
                 this.render();
                 setTimeout(() => app.toggleLoader(false), 800);
             },
-
             setView(v) {
                 this.state.view = v;
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
@@ -266,10 +253,8 @@
                 if (nav) nav.classList.add('active');
                 this.render();
             },
-
             hideModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); },
             showAddClient() { this.hideModals(); document.getElementById('modal-add-client').classList.add('active'); },
-
             async saveNewClient(e) {
                 e.preventDefault();
                 app.toggleLoader(true, "Creating Profile...");
@@ -277,68 +262,56 @@
                     name: document.getElementById('n-name').value,
                     phone: document.getElementById('n-phone').value,
                     status: document.getElementById('n-status').value,
-                    industry: 'Coaching', password: '1234', history: [], tasks: [], files: []
+                    password: '1234', history: [], tasks: [], files: []
                 });
                 this.hideModals(); this.loadData();
             },
-
             showDetails(id) {
                 this.state.activeId = id;
                 const c = this.state.clients.find(x => x.id == id);
-                document.getElementById('det-header').innerHTML = `
-                    <h1 style="font-size: 2.2rem; color: var(--accent-red);">${c.name}</h1>
-                    <p style="color: var(--text-muted); font-weight: 600;">${c.phone} • ${c.status}</p>
-                `;
+                document.getElementById('det-header').innerHTML = `<h1 style="font-size: 2.2rem; color: var(--accent-red);">${c.name}</h1><p style="font-weight: 600;">${c.phone} • QS PARTNER</p>`;
                 document.getElementById('det-pass').value = c.password;
                 this.renderDetailsUI(c);
                 document.getElementById('modal-details').classList.add('active');
             },
-
             renderDetailsUI(c) {
                 document.getElementById('det-assets').innerHTML = (c.files || []).map(f => `
                     <a href="${f.url}" target="_blank" class="asset-item">
-                        <img src="${f.type === 'image' ? f.url : 'https://cdn-icons-png.flaticon.com/512/2306/2306081.png'}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2306/2306081.png'">
+                        <img src="${f.type === 'image' ? f.url : 'https://cdn-icons-png.flaticon.com/512/2306/2306081.png'}">
                         <p class="asset-name">${f.name}</p>
                     </a>
                 `).join('');
                 document.getElementById('det-tasks').innerHTML = (c.tasks || []).map(t => `
-                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid #f1f5f9; border-radius: 14px; margin-bottom: 0.5rem; background: white; ${t.status === 'done' ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
-                        <input type="checkbox" style="width: 20px; height: 20px;" ${t.status === 'done' ? 'checked' : ''} onchange="app.toggleTask(${t.id})">
+                    <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid #f1f5f9; border-radius: 14px; margin-bottom: 0.5rem; ${t.status === 'done' ? 'opacity: 0.5; text-decoration: line-through;' : ''}">
+                        <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="app.toggleTask(${t.id})">
                         <span style="flex: 1; font-weight: 600;">${t.title}</span>
                     </div>
                 `).join('');
                 document.getElementById('det-timeline').innerHTML = (c.history || []).map(h => `
                     <div style="position: relative; padding-bottom: 1.5rem;">
                         <div style="position: absolute; left: -2.35rem; top: 0.4rem; width: 10px; height: 10px; background: var(--accent-red); border-radius: 50%; border: 2px solid white;"></div>
-                        <p style="font-size: 0.7rem; font-weight: 800; color: var(--accent-red); margin-bottom: 0.25rem;">${new Date(h.date).toLocaleDateString()}</p>
+                        <p style="font-size: 0.7rem; font-weight: 800; color: var(--accent-red);">${new Date(h.date).toLocaleDateString()}</p>
                         <div style="background: white; padding: 0.8rem; border-radius: 12px; border: 1px solid #f1f5f9;">${h.note}</div>
                     </div>
                 `).join('');
                 lucide.createIcons();
             },
-
             async uploadFile(e, isCoach = false) {
                 const file = e.target.files[0];
                 if (!file) return;
-                app.toggleLoader(true, "Uploading...");
+                app.toggleLoader(true, "Sharing...");
                 const targetId = isCoach ? this.state.activeId : this.state.user.id;
                 const client = this.state.clients.find(x => x.id == targetId);
                 const path = `${targetId}/${Date.now()}_${file.name}`;
-                
-                const { error } = await sb.storage.from('quest-spark').upload(path, file);
-                if (error) { alert("Bucket Error"); app.toggleLoader(false); return; }
-                
+                await sb.storage.from('quest-spark').upload(path, file);
                 const url = sb.storage.from('quest-spark').getPublicUrl(path).data.publicUrl;
                 const files = client.files || [];
                 files.unshift({ name: file.name, url, type: file.type.includes('image') ? 'image' : 'file', date: new Date().toISOString() });
                 const history = client.history || [];
-                history.unshift({ date: new Date().toISOString(), note: `Shared file: ${file.name}`, type: 'Asset', from: isCoach ? 'Coach' : 'Client' });
-                
+                history.unshift({ date: new Date().toISOString(), note: `Shared: ${file.name}`, type: 'Asset', from: isCoach ? 'Coach' : 'Client' });
                 await sb.from('clients').update({ files, history }).eq('id', targetId);
-                await this.loadData();
-                if (isCoach) this.showDetails(targetId);
+                await this.loadData(); if (isCoach) this.showDetails(targetId);
             },
-
             async addTask() {
                 const title = document.getElementById('det-task').value;
                 if (!title) return;
@@ -349,27 +322,16 @@
                 document.getElementById('det-task').value = ''; 
                 await this.loadData(); this.showDetails(c.id);
             },
-
             async toggleTask(tid) {
                 const c = this.state.clients.find(x => x.id == this.state.activeId);
                 const tasks = c.tasks.map(t => t.id === tid ? {...t, status: t.status === 'done' ? 'pending' : 'done'} : t);
                 await sb.from('clients').update({ tasks }).eq('id', c.id);
                 await this.loadData(); this.showDetails(c.id);
             },
-
             async updatePass() {
                 await sb.from('clients').update({ password: document.getElementById('det-pass').value }).eq('id', this.state.activeId);
-                alert("Security Updated"); this.loadData();
+                alert("Updated"); this.loadData();
             },
-
-            async deleteClient() {
-                if(confirm("Archive this client record?")) {
-                    app.toggleLoader(true, "Archiving...");
-                    await sb.from('clients').delete().eq('id', this.state.activeId);
-                    this.hideModals(); this.loadData();
-                }
-            },
-
             render() {
                 const el = document.getElementById('view-content');
                 if (this.state.role === 'client') return this.renderClientPortal(el);
@@ -378,113 +340,54 @@
                 if (this.state.view === 'feedback') this.renderFeedback(el);
                 lucide.createIcons();
             },
-
             renderDashboard(el) {
-                const onboarded = this.state.clients.filter(c => c.status === 'Onboarded').length;
                 el.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
-                        <h1>Activity Overview</h1>
-                        <p style="color: var(--text-muted); font-weight: 500;">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-                    </div>
+                    <h1 style="margin-bottom: 2.5rem;">QS Overview</h1>
                     <div class="stat-grid">
-                        <div class="card">
-                            <i data-lucide="users" style="color: var(--accent-red); margin-bottom: 1rem;"></i>
-                            <h3 style="font-size: 2rem;">${this.state.clients.length}</h3>
-                            <p style="color: var(--text-muted);">Database Population</p>
-                        </div>
-                        <div class="card" style="border-bottom: 4px solid var(--accent-red);">
-                            <i data-lucide="zap" style="color: var(--accent-red); margin-bottom: 1rem;"></i>
-                            <h3 style="font-size: 2rem;">${onboarded}</h3>
-                            <p style="color: var(--text-muted);">Active Partnerships</p>
-                        </div>
-                        <div class="card">
-                            <i data-lucide="check-circle" style="color: var(--accent-red); margin-bottom: 1rem;"></i>
-                            <h3 style="font-size: 2rem;">${this.state.clients.filter(c => c.status === 'Lead').length}</h3>
-                            <p style="color: var(--text-muted);">Incoming Leads</p>
-                        </div>
+                        <div class="card"><i data-lucide="users" style="color:var(--accent-red)"></i><h3>${this.state.clients.length}</h3><p>QS Partners</p></div>
+                        <div class="card"><i data-lucide="zap" style="color:var(--accent-red)"></i><h3>${this.state.clients.filter(c => c.status === 'Onboarded').length}</h3><p>Active Leads</p></div>
                     </div>
-                    <h2 style="margin-bottom: 1.5rem;">Recent Partnerships</h2>
+                    <h2 style="margin-bottom: 1.5rem;">Recently Added</h2>
                     <div class="client-grid">${this.state.clients.slice(0, 6).map(c => this.cardTpl(c)).join('')}</div>
                 `;
             },
-
             renderDirectory(el) {
-                el.innerHTML = `<h1>Master Directory</h1><div class="client-grid" style="margin-top: 2rem;">${this.state.clients.map(c => this.cardTpl(c)).join('')}</div>`;
+                el.innerHTML = `<h1>QS Directory</h1><div class="client-grid" style="margin-top: 2rem;">${this.state.clients.map(c => this.cardTpl(c)).join('')}</div>`;
             },
-
             renderFeedback(el) {
                 const feeds = this.state.clients.flatMap(c => (c.history || []).filter(h => h.from === 'Client').map(h => ({...h, cName: c.name, cId: c.id})));
-                el.innerHTML = `
-                    <h1>Feedback Hub</h1>
-                    <div style="margin-top: 2rem; display: grid; gap: 1rem;">
-                        ${feeds.length ? feeds.map(f => `
-                            <div class="card" onclick="app.showDetails(${f.cId})" style="cursor:pointer; display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <b style="color: var(--accent-red);">${f.cName}</b> • <small style="color: var(--text-muted);">${new Date(f.date).toLocaleString()}</small>
-                                    <p style="margin-top: 0.5rem; font-weight: 500;">${f.note}</p>
-                                </div>
-                                <i data-lucide="chevron-right" style="color: var(--border);"></i>
-                            </div>
-                        `).join('') : '<p>Inbox is currently empty.</p>'}
+                el.innerHTML = `<h1>QS Feedback</h1><div style="margin-top: 2rem;">${feeds.map(f => `
+                    <div class="card" onclick="app.showDetails(${f.cId})" style="cursor:pointer; display: flex; justify-content: space-between;">
+                        <div><b>${f.cName}</b><p>${f.note}</p></div>
+                        <i data-lucide="chevron-right"></i>
                     </div>
-                `;
+                `).join('')}</div>`;
             },
-
             renderClientPortal(el) {
                 const c = this.state.user;
                 el.innerHTML = `
-                    <div style="background: var(--accent-red); padding: 6rem 4rem; color: white; margin: -3rem -3rem 4rem -3rem; border-radius: 0 0 40px 40px; box-shadow: var(--shadow);">
-                        <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">Welcome, ${c.name}</h1>
-                        <p style="opacity: 0.9; font-weight: 500; letter-spacing: 1px;">QUEST SPARK OFFICIAL CLIENT PORTAL</p>
+                    <div style="background: var(--accent-red); padding: 5rem 4rem; color: white; margin: -3rem -3rem 4rem -3rem; border-radius: 0 0 30px 30px;">
+                        <h1>QS | Welcome, ${c.name}</h1>
                     </div>
                     <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 3rem;">
                         <div>
                             <div class="card">
-                                <h3 style="margin-bottom: 1.5rem;">Weekly Update</h3>
-                                <textarea id="cl-note" rows="4" style="margin-bottom: 1rem;" placeholder="Share your progress or roadblocks with your coach..."></textarea>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <label class="btn btn-secondary" style="cursor: pointer;">
-                                        <i data-lucide="paperclip"></i> Share Attachment
-                                        <input type="file" style="display: none;" onchange="app.uploadFile(event, false)">
-                                    </label>
-                                    <button class="btn btn-primary" onclick="app.postClientNote()">Post Update</button>
+                                <h3>Portal Message</h3>
+                                <textarea id="cl-note" rows="4" style="margin: 1rem 0;" placeholder="Message QS..."></textarea>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <label class="btn btn-secondary" style="cursor: pointer;"><i data-lucide="paperclip"></i> File<input type="file" style="display: none;" onchange="app.uploadFile(event, false)"></label>
+                                    <button class="btn btn-primary" onclick="app.postClientNote()">Send</button>
                                 </div>
                             </div>
-                            <div class="card">
-                                <h3 style="margin-bottom: 1.5rem;">Progress Timeline</h3>
-                                <div style="margin-top: 1.5rem;">${(c.history || []).map(h => `
-                                    <div style="padding: 1rem; background: #f8fafc; border-radius: 16px; margin-bottom: 1rem; border-left: 4px solid ${h.from === 'Coach' ? 'var(--accent-red)' : '#cbd5e1'};">
-                                        <small style="font-weight: 800; color: ${h.from === 'Coach' ? 'var(--accent-red)' : '#64748b'};">${h.from.toUpperCase()}</small>
-                                        <p style="margin-top: 0.25rem; font-weight: 500;">${h.note}</p>
-                                    </div>
-                                `).join('')}</div>
-                            </div>
+                            <div class="card"><h3>QS Timeline</h3><div style="margin-top: 1rem;">${(c.history || []).map(h => `<div style="padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 0.5rem; border-left: 3px solid ${h.from === 'Coach' ? 'var(--accent-red)' : '#cbd5e1'};">${h.note}</div>`).join('')}</div></div>
                         </div>
                         <div>
-                            <div class="card" style="border-top: 4px solid var(--accent-red);">
-                                <h3 style="margin-bottom: 1.5rem;">Shared Resources</h3>
-                                <div class="asset-list">${(c.files || []).map(f => `
-                                    <a href="${f.url}" target="_blank" class="asset-item">
-                                        <img src="${f.type === 'image' ? f.url : 'https://cdn-icons-png.flaticon.com/512/2306/2306081.png'}">
-                                        <p class="asset-name">${f.name}</p>
-                                    </a>
-                                `).join('')}</div>
-                            </div>
-                            <div class="card" style="background: #fff1f1; border: none;">
-                                <h3 style="margin-bottom: 1.5rem;">Next Milestone</h3>
-                                <div>${(c.tasks || []).map(t => `
-                                    <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: white; border-radius: 12px; margin-bottom: 0.5rem; ${t.status === 'done' ? 'opacity: 0.5;' : ''}">
-                                        <i data-lucide="${t.status === 'done' ? 'check-circle' : 'circle'}" style="color: var(--accent-red); width: 18px;"></i>
-                                        <span style="font-weight: 600; font-size: 0.9rem;">${t.title}</span>
-                                    </div>
-                                `).join('')}</div>
-                            </div>
-                            <a href="https://wa.me/254711980306" class="btn btn-wa" style="width: 100%; padding: 1.2rem; font-size: 1rem;">Direct WhatsApp Coach</a>
+                            <div class="card"><h3>QS Files</h3><div class="asset-list">${(c.files || []).map(f => `<a href="${f.url}" target="_blank" class="asset-item"><img src="${f.type === 'image' ? f.url : 'https://cdn-icons-png.flaticon.com/512/2306/2306081.png'}"><p class="asset-name">${f.name}</p></a>`).join('')}</div></div>
+                            <a href="https://wa.me/254711980306" class="btn btn-wa" style="width: 100%;">WhatsApp QS</a>
                         </div>
                     </div>
                 `;
             },
-
             async postClientNote() {
                 const note = document.getElementById('cl-note').value;
                 if (!note) return;
@@ -494,21 +397,10 @@
                 await sb.from('clients').update({ history }).eq('id', this.state.user.id);
                 document.getElementById('cl-note').value = ''; await this.loadData();
             },
-
             cardTpl(c) {
-                return `
-                    <div class="card client-card" onclick="app.showDetails(${c.id})">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                            <span class="badge ${c.status === 'Lead' ? 'badge-slate' : 'badge-red'}">${c.status}</span>
-                            <i data-lucide="arrow-up-right" style="width: 16px; color: #cbd5e1;"></i>
-                        </div>
-                        <h3 style="font-size: 1.25rem;">${c.name}</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; font-weight: 500; margin-top: 0.25rem;">${c.phone}</p>
-                    </div>
-                `;
+                return `<div class="card client-card" onclick="app.showDetails(${c.id})"><div style="display: flex; justify-content: space-between; margin-bottom: 1rem;"><span class="badge ${c.status === 'Lead' ? 'badge-slate' : 'badge-red'}">${c.status}</span><i data-lucide="plus" style="width: 16px;"></i></div><h3>${c.name}</h3><p style="color:var(--text-muted); font-size:0.8rem;">${c.phone}</p></div>`;
             }
         };
-
         app.init();
     </script>
 </body>
