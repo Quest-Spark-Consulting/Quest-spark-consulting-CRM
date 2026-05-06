@@ -76,61 +76,8 @@
 </head>
 <body>
 
-    <!-- Auth Screen -->
-    <div id="auth-screen" class="modal active">
-        <div class="modal-content" style="text-align: center;">
-            <h1 style="color: var(--accent-red); margin-bottom: 1rem;">Quest Spark</h1>
-            <p style="margin-bottom: 2.5rem; color: var(--text-muted);">Select your portal to continue</p>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <button class="btn btn-primary" onclick="app.showCoachLogin()" style="justify-content: center; font-size: 1.1rem; padding: 1rem;">I am a Coach</button>
-                <button class="btn btn-secondary" onclick="app.showClientLogin()" style="justify-content: center; font-size: 1.1rem; padding: 1rem;">I am a Client</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Coach Login Modal -->
-    <div id="modal-coach-auth" class="modal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 1.5rem;">Coach Dashboard Access</h2>
-            <form id="coach-login-form">
-                <div class="form-group">
-                    <label>Master Password</label>
-                    <input type="password" id="coach-pass-input" required placeholder="Enter password...">
-                </div>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">Hint: Try emergency key 'spark2024' if stuck.</p>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Unlock Dashboard</button>
-                <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="app.hideModals()">Back</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Set Password Modal (First Time Only) -->
-    <div id="modal-set-password" class="modal">
-        <div class="modal-content">
-            <h2>Welcome, Coach!</h2>
-            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Please set a secure master password for your dashboard.</p>
-            <form id="set-password-form">
-                <div class="form-group"><label>New Password</label><input type="password" id="new-master-pass" required></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Save & Continue</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Client Login Modal -->
-    <div id="modal-client-auth" class="modal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 1.5rem;">Client Journey Portal</h2>
-            <form id="client-login-form">
-                <div class="form-group"><label>Phone Number</label><input type="text" id="client-phone-input" placeholder="07XXXXXXXX" required></div>
-                <div class="form-group"><label>Access Password</label><input type="password" id="client-pass-input" placeholder="Enter password..." required></div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">View My Journey</button>
-                <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="app.hideModals()">Back</button>
-            </form>
-        </div>
-    </div>
-
     <!-- Main Application -->
-    <div id="app" style="display: none;">
+    <div id="app" style="display: flex;">
         <aside>
             <div class="logo">
                 <i data-lucide="sparkles"></i>
@@ -145,11 +92,16 @@
                     <button class="btn btn-primary" style="width: 100%;" onclick="app.showAddClient()">+ New Client</button>
                 </div>
             </nav>
-            <button class="btn btn-secondary" style="width: 100%; margin-top: auto;" onclick="location.reload()">Logout</button>
+            <p style="margin-top: auto; font-size: 0.7rem; color: var(--text-muted); opacity: 0.5;">v2.0 (No-Auth Mode)</p>
         </aside>
         
         <main>
-            <div id="view-content"></div>
+            <div id="view-content">
+                <div style="text-align: center; padding-top: 5rem;">
+                    <h2 style="color: var(--accent-blue);">Waking up the system...</h2>
+                    <p>Fetching your clients from the cloud.</p>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -192,69 +144,24 @@
         const sb = supabase.createClient(SB_URL, SB_KEY);
 
         const app = {
-            state: { role: null, view: 'dashboard', clients: [], user: null },
+            state: { role: 'coach', view: 'dashboard', clients: [], user: null },
             
             async init() {
                 lucide.createIcons();
-            },
-
-            async showCoachLogin() {
-                try {
-                    const { data } = await sb.from('config').select('value').eq('key', 'master_password');
-                    if (!data || data.length === 0) document.getElementById('modal-set-password').classList.add('active');
-                    else document.getElementById('modal-coach-auth').classList.add('active');
-                } catch(e) {
-                    document.getElementById('modal-set-password').classList.add('active');
-                }
-            },
-
-            showClientLogin() {
-                document.getElementById('modal-client-auth').classList.add('active');
+                await this.loadData();
             },
 
             hideModals() {
                 document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
             },
 
-            async coachLogin(pass) {
-                if (pass === 'spark2024') {
-                    this.state.role = 'coach';
-                    await this.loadData();
-                    this.showApp();
-                    return;
-                }
-                const { data } = await sb.from('config').select('value').eq('key', 'master_password');
-                if (data && data.some(row => String(row.value).trim() === String(pass).trim())) {
-                    this.state.role = 'coach';
-                    await this.loadData();
-                    this.showApp();
-                } else {
-                    alert("Invalid Password. Use emergency key 'spark2024' if you forgot your password.");
-                }
-            },
-
-            async clientLogin(phone, pass) {
-                const { data } = await sb.from('clients').select('*').ilike('phone', `%${phone.slice(-9)}`).maybeSingle();
-                if (data && String(data.password) === String(pass)) {
-                    this.state.role = 'client';
-                    this.state.user = data;
-                    this.showApp();
-                } else alert("Client not found or invalid password.");
-            },
-
             async loadData() {
-                const { data } = await sb.from('clients').select('*').order('name');
-                this.state.clients = data || [];
-                this.render();
-            },
-
-            showApp() {
-                this.hideModals();
-                document.getElementById('auth-screen').classList.remove('active');
-                document.getElementById('app').style.display = 'flex';
-                if (this.state.role === 'client') {
-                    document.querySelector('aside').style.display = 'none';
-                    document.querySelector('main').style.marginLeft = '0';
+                try {
+                    const { data, error } = await sb.from('clients').select('*').order('name');
+                    if (error) throw error;
+                    this.state.clients = data || [];
+                } catch(e) {
+                    console.error("Cloud error:", e);
                 }
                 this.render();
             },
@@ -302,14 +209,10 @@
 
             render() {
                 const content = document.getElementById('view-content');
-                if (this.state.role === 'client') {
-                    this.renderClientPortal(content);
-                } else {
-                    if (this.state.view === 'dashboard') this.renderDashboard(content);
-                    if (this.state.view === 'clients') this.renderClients(content);
-                    if (this.state.view === 'tasks') this.renderTasks(content);
-                    if (this.state.view === 'reports') this.renderReports(content);
-                }
+                if (this.state.view === 'dashboard') this.renderDashboard(content);
+                if (this.state.view === 'clients') this.renderClients(content);
+                if (this.state.view === 'tasks') this.renderTasks(content);
+                if (this.state.view === 'reports') this.renderReports(content);
                 lucide.createIcons();
             },
 
@@ -317,7 +220,7 @@
                 const leads = this.state.clients.filter(c => c.status === 'Lead').length;
                 const onboarded = this.state.clients.filter(c => c.status === 'Onboarded').length;
                 el.innerHTML = `
-                    <h1 style="margin-bottom: 2rem;">Overview</h1>
+                    <h1 style="margin-bottom: 2rem;">Welcome Back, Coach</h1>
                     <div class="stat-grid">
                         <div class="card"><p style="color: var(--text-muted); font-size: 0.8rem;">TOTAL CLIENTS</p><h2>${this.state.clients.length}</h2></div>
                         <div class="card"><p style="color: var(--accent-blue); font-size: 0.8rem;">ACTIVE LEADS</p><h2>${leads}</h2></div>
@@ -378,38 +281,6 @@
                 `;
             },
 
-            renderClientPortal(el) {
-                const c = this.state.user;
-                el.innerHTML = `
-                    <div style="background: linear-gradient(135deg, var(--accent-red), #6d1717); margin: -3rem -3rem 3rem -3rem; padding: 5rem 3rem; color: white;">
-                        <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">Hello, ${c.name}</h1>
-                        <p style="font-size: 1.25rem; opacity: 0.9;">Welcome to your Coaching Journey</p>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
-                        <div class="card">
-                            <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;"><i data-lucide="scroll-text"></i> Progress Timeline</h2>
-                            <div class="timeline">${(c.history || []).map(h => `
-                                <div class="timeline-item">
-                                    <div class="timeline-date">${new Date(h.date).toLocaleDateString()} • ${h.type}</div>
-                                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #eee;">${h.note}</div>
-                                </div>
-                            `).join('')}</div>
-                        </div>
-                        <div style="position: sticky; top: 2rem;">
-                            <div class="card" style="margin-bottom: 1.5rem;">
-                                <h3>Quick Actions</h3>
-                                <a href="https://wa.me/254711980306" target="_blank" class="btn btn-wa" style="width:100%; margin-top: 1rem;"><i data-lucide="message-circle"></i> Message Coach</a>
-                            </div>
-                            <div class="card">
-                                <h3>Portal Info</h3>
-                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem;">Status: <b>${c.status}</b></p>
-                                <p style="font-size: 0.8rem; color: var(--text-muted);">Sector: <b>${c.industry}</b></p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            },
-
             clientCardTemplate(c) {
                 return `
                     <div class="card client-card ${c.status.toLowerCase()}">
@@ -439,20 +310,6 @@
         };
 
         // Form Event Listeners
-        document.getElementById('coach-login-form').onsubmit = e => { e.preventDefault(); app.coachLogin(document.getElementById('coach-pass-input').value); };
-        document.getElementById('set-password-form').onsubmit = async e => {
-            e.preventDefault();
-            const pass = document.getElementById('new-master-pass').value;
-            const { error } = await sb.from('config').upsert({ key: 'master_password', value: pass });
-            if (error) alert("Database Warning: " + error.message + ". Logging you in anyway.");
-            app.state.role = 'coach';
-            await app.loadData();
-            app.showApp();
-        };
-        document.getElementById('client-login-form').onsubmit = e => {
-            e.preventDefault();
-            app.clientLogin(document.getElementById('client-phone-input').value, document.getElementById('client-pass-input').value);
-        };
         document.getElementById('client-form').onsubmit = async e => {
             e.preventDefault();
             const id = document.getElementById('f-id').value;
