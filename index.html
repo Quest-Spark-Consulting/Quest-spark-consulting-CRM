@@ -96,7 +96,7 @@
     <div id="loader">
         <div class="spinner"></div>
         <div class="pulse">QUEST SPARK</div>
-        <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.85rem;">Initializing Command Center...</p>
+        <p style="margin-top: 1rem; color: var(--text-muted); font-size: 0.85rem;">Empowering dreams...</p>
     </div>
 
     <!-- Auth Gate -->
@@ -240,7 +240,7 @@
                 }
             },
 
-            toggleLoader(show, text = "Initializing...") {
+            toggleLoader(show, text = "Empowering dreams...") {
                 const l = document.getElementById('loader');
                 l.querySelector('p').innerText = text;
                 if(show) l.classList.remove('hidden');
@@ -451,7 +451,7 @@
             async postClientNote() {
                 const note = document.getElementById('cl-note').value;
                 if (!note) return;
-                app.toggleLoader(true, "Posting Update...");
+                app.toggleLoader(true, "Empowering dreams...");
                 const history = this.state.user.history || [];
                 history.unshift({ date: new Date().toISOString(), note, type: 'Feedback', from: 'Client' });
                 await sb.from('clients').update({ history }).eq('id', this.state.user.id);
