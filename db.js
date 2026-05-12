@@ -1,3 +1,7 @@
+const SUPABASE_URL = 'https://ivmomvigwanfhwkreqic.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_5nDWK1EEGa5xWzrKLEqNfw_BNgjFUBp';
+const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const INITIAL_DATA = [
     { id: 1, name: "Cynthia Wanyonyi", industry: "Wellbeing", phone: "0711980306", status: "Onboarded", notes: "", pin: "2020", progressHistory: [] },
     { id: 2, name: "Mzito", industry: "Retail", phone: "0714644856", status: "Lead", notes: "", pin: "2020", progressHistory: [] },
@@ -10,25 +14,56 @@ const INITIAL_DATA = [
     { id: 9, name: "Susan", industry: "General", phone: "0720825206", status: "Lead", notes: "", pin: "2020", progressHistory: [] }
 ];
 
+function normalize(data) {
+    return (data || []).map(item => ({
+        ...item,
+        pin: item.pin || '2020',
+        progressHistory: item.progressHistory || [],
+        feedbackHistory: item.feedbackHistory || []
+    }));
+}
+
+let syncCallbacks = [];
+
 const db = {
-    save(data) {
+    onSync(fn) { syncCallbacks.push(fn); },
+    triggerSync() { syncCallbacks.forEach(fn => fn(db.load())); },
+
+    async save(data) {
         localStorage.setItem('crm_data', JSON.stringify(data));
-        // Hook for cloud sync can be added here
+        try {
+            await supabase.from('app_data').upsert({ id: 1, data: data, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+        } catch (e) { console.warn('Supabase sync failed (saving locally):', e.message); }
     },
+
     load() {
         const data = localStorage.getItem('crm_data');
         if (!data) return INITIAL_DATA;
-        
-        // Ensure all items have progressHistory
-        const parsed = JSON.parse(data);
-        return parsed.map(item => ({
-            ...item,
-            pin: item.pin || '2020',
-            progressHistory: item.progressHistory || [],
-            feedbackHistory: item.feedbackHistory || []
-        }));
+        return normalize(JSON.parse(data));
     },
-    addClient(client) {
+
+    async loadRemote() {
+        try {
+            const { data: row } = await supabase.from('app_data').select('data').eq('id', 1).single();
+            if (row?.data) {
+                localStorage.setItem('crm_data', JSON.stringify(row.data));
+                return normalize(row.data);
+            }
+        } catch (e) { console.warn('Supabase fetch failed (using local):', e.message); }
+        return this.load();
+    },
+
+    subscribe() {
+        try {
+            supabase.channel('app_data_changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'app_data', filter: 'id=eq.1' }, () => {
+                    this.loadRemote().then(() => this.triggerSync());
+                })
+                .subscribe();
+        } catch (e) { console.warn('Supabase real-time not available:', e.message); }
+    },
+
+    async addClient(client) {
         const data = this.load();
         const newClient = { 
             ...client, 
@@ -38,16 +73,18 @@ const db = {
             feedbackHistory: []
         };
         data.push(newClient);
-        this.save(data);
+        await this.save(data);
         return newClient;
     },
-    updateClient(id, updates) {
+
+    async updateClient(id, updates) {
         let data = this.load();
         data = data.map(c => c.id === id ? { ...c, ...updates } : c);
-        this.save(data);
+        await this.save(data);
         return data;
     },
-    addProgress(clientId, note, files, sender) {
+
+    async addProgress(clientId, note, files, sender) {
         let data = this.load();
         data = data.map(c => {
             if (c.id === clientId) {
@@ -62,10 +99,11 @@ const db = {
             }
             return c;
         });
-        this.save(data);
+        await this.save(data);
         return data;
     },
-    addFeedback(clientId, text, files) {
+
+    async addFeedback(clientId, text, files) {
         let data = this.load();
         data = data.map(c => {
             if (c.id === clientId) {
@@ -79,13 +117,14 @@ const db = {
             }
             return c;
         });
-        this.save(data);
+        await this.save(data);
         return data;
     },
-    deleteClient(id) {
+
+    async deleteClient(id) {
         let data = this.load();
         data = data.filter(c => c.id !== id);
-        this.save(data);
+        await this.save(data);
         return data;
     }
 };

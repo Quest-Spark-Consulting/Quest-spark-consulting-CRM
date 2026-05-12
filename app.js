@@ -1,5 +1,5 @@
 // ===== STATE =====
-let state = { role: null, clientData: null, view: 'dashboard', searchQuery: '', data: db.load(), prevView: null };
+let state = { role: null, clientData: null, view: 'dashboard', searchQuery: '', data: [], prevView: null };
 
 // ===== HELPERS =====
 function fmtDT(iso) { const d = new Date(iso); return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
@@ -24,7 +24,17 @@ const viewContainer = $('view-container');
 const clientViewContainer = $('client-view-container');
 
 // ===== SPLASH ON LOAD =====
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    state.data = await db.loadRemote();
+    db.subscribe();
+    db.onSync((newData) => {
+        state.data = newData;
+        if (state.role === 'coach') coachRender();
+        else if (state.role === 'client' && state.clientData) {
+            state.clientData = state.data.find(c => c.id === state.clientData.id);
+            clientRender(state.view || 'my-profile');
+        }
+    });
     setTimeout(() => {
         $('splash-screen').classList.add('d-none');
         loginPage.classList.remove('d-none');
@@ -299,10 +309,11 @@ function renderCoachChat(c) {
             reader.readAsDataURL(f);
         }));
         Promise.all(readerPromises).then(() => {
-            db.addProgress(id, msg, files, 'coach');
-            state.data = db.load();
-            const cl = state.data.find(x => x.id === id);
-            if (cl) renderCoachChat(cl);
+            db.addProgress(id, msg, files, 'coach').then(() => db.loadRemote()).then(data => {
+                state.data = data;
+                const cl = data.find(x => x.id === id);
+                if (cl) renderCoachChat(cl);
+            });
         });
     });
 }
@@ -385,10 +396,11 @@ function renderCoachClientDetail(c) {
             reader.readAsDataURL(f);
         }));
         Promise.all(readerPromises).then(() => {
-            db.addProgress(c.id, msg, files, 'coach');
-            state.data = db.load();
-            const cl = state.data.find(x => x.id === c.id);
-            if (cl) renderCoachClientDetail(cl);
+            db.addProgress(c.id, msg, files, 'coach').then(() => db.loadRemote()).then(data => {
+                state.data = data;
+                const cl = data.find(x => x.id === c.id);
+                if (cl) renderCoachClientDetail(cl);
+            });
         });
     });
 }
@@ -474,10 +486,11 @@ function clientRender(view) {
                 reader.readAsDataURL(f);
             }));
             Promise.all(readerPromises).then(() => {
-                db.addProgress(state.clientData.id, msg, files, 'client');
-                state.data = db.load();
-                state.clientData = state.data.find(x => x.id === state.clientData.id);
-                clientRender('my-progress');
+                db.addProgress(state.clientData.id, msg, files, 'client').then(() => db.loadRemote()).then(data => {
+                    state.data = data;
+                    state.clientData = data.find(x => x.id === state.clientData.id);
+                    clientRender('my-progress');
+                });
             });
         });
     }
@@ -518,8 +531,7 @@ $('feedback-files').addEventListener('change', function() {
 
 window.deleteClient = function(id) {
     if (confirm('Delete this client?')) {
-        state.data = db.deleteClient(id);
-        coachRender();
+        db.deleteClient(id).then(data => { state.data = data; coachRender(); });
     }
 };
 
@@ -528,8 +540,7 @@ window.quickStatus = function(id) {
     if (!c) return;
     const next = c.status === 'Lead' ? 'Onboarded' : c.status === 'Onboarded' ? 'Converted' : 'Lead';
     if (confirm(`Change ${c.name} status from "${c.status}" to "${next}"?`)) {
-        state.data = db.updateClient(id, { status: next });
-        coachRender();
+        db.updateClient(id, { status: next }).then(data => { state.data = data; coachRender(); });
     }
 };
 
@@ -538,25 +549,24 @@ $('client-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const fd = new FormData($('client-form'));
     const editId = $('edit-id').value;
-    if (editId) {
-        db.updateClient(parseInt(editId), Object.fromEntries(fd));
-    } else {
-        db.addClient(Object.fromEntries(fd));
-    }
-    state.data = db.load();
-    $('client-modal').classList.add('d-none');
-    coachRender();
+    const save = editId ? db.updateClient(parseInt(editId), Object.fromEntries(fd)) : db.addClient(Object.fromEntries(fd));
+    save.then(() => db.loadRemote()).then(data => {
+        state.data = data;
+        $('client-modal').classList.add('d-none');
+        coachRender();
+    });
 });
 
 $('progress-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const id = parseInt($('progress-client-id').value);
     const note = $('progress-note').value;
-    db.addProgress(id, note, [], 'coach');
-    state.data = db.load();
-    $('progress-modal').classList.add('d-none');
-    if (state.role === 'coach') coachRender();
-    else { state.clientData = state.data.find(c => c.id === id); clientRender('my-progress'); }
+    db.addProgress(id, note, [], 'coach').then(() => db.loadRemote()).then(data => {
+        state.data = data;
+        $('progress-modal').classList.add('d-none');
+        if (state.role === 'coach') coachRender();
+        else { state.clientData = state.data.find(c => c.id === id); clientRender('my-progress'); }
+    });
 });
 
 $('feedback-form').addEventListener('submit', (e) => {
@@ -574,10 +584,11 @@ $('feedback-form').addEventListener('submit', (e) => {
         reader.readAsDataURL(f);
     }));
     Promise.all(readerPromises).then(() => {
-        db.addFeedback(id, text, files);
-        state.data = db.load();
-        $('feedback-modal').classList.add('d-none');
-        if (state.role === 'coach') coachRender();
-        else { state.clientData = state.data.find(c => c.id === id); clientRender('my-feedback'); }
+        db.addFeedback(id, text, files).then(() => db.loadRemote()).then(data => {
+            state.data = data;
+            $('feedback-modal').classList.add('d-none');
+            if (state.role === 'coach') coachRender();
+            else { state.clientData = state.data.find(c => c.id === id); clientRender('my-feedback'); }
+        });
     });
 });
