@@ -167,9 +167,15 @@ function renderCoachIndustries(data) {
 
 function renderCoachReports(data) {
     viewContainer.innerHTML = `
-        <h4 class="page-title"><i class="bi bi-file-text"></i> Reports</h4>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
+            <h4 class="page-title" style="margin-bottom:0"><i class="bi bi-file-text"></i> Reports</h4>
+            <div style="display:flex;gap:0.5rem">
+                <button class="btn btn-sm btn-outline-primary" onclick="exportExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                <button class="btn btn-sm btn-primary" onclick="exportPDF()"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+            </div>
+        </div>
         <div class="card-crm"><div class="card-header">Weekly Coaching Review</div>
-        <div style="overflow-x:auto">
+        <div id="reports-content" style="overflow-x:auto">
         <table class="table-crm">
             <thead><tr><th>Client</th><th>Industry</th><th>Status</th><th>Latest Message</th><th></th></tr></thead>
             <tbody>${data.map(c => {
@@ -182,6 +188,27 @@ function renderCoachReports(data) {
         </table></div></div>
     `;
 }
+
+window.exportExcel = function() {
+    const data = state.data;
+    let csv = 'Client,Industry,Phone,Status,Latest Message,Message Date\n';
+    data.forEach(c => {
+        const last = c.progressHistory?.length > 0 ? c.progressHistory[c.progressHistory.length - 1] : null;
+        const msg = last ? '"' + last.note.replace(/"/g,'""') + '"' : '';
+        const dt = last ? fmtDT(last.date) : '';
+        csv += '"' + c.name + '","' + c.industry + '","' + c.phone + '","' + c.status + '",' + msg + ',' + dt + '\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'QuestSpark_Report.csv'; a.click();
+    URL.revokeObjectURL(a.href);
+};
+
+window.exportPDF = function() {
+    const el = document.getElementById('reports-content');
+    if (!el) return;
+    const opt = { margin: 0.5, filename: 'QuestSpark_Report.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
+    html2pdf().set(opt).from(el).save();
+};
 
 function renderCoachFeedback(data) {
     viewContainer.innerHTML = `
