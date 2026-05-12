@@ -47,7 +47,7 @@ const db = {
         this.save(data);
         return data;
     },
-    addProgress(clientId, note, files) {
+    addProgress(clientId, note, files, sender) {
         let data = this.load();
         data = data.map(c => {
             if (c.id === clientId) {
@@ -55,7 +55,8 @@ const db = {
                 history.push({
                     date: new Date().toISOString(),
                     note: note,
-                    files: files || []
+                    files: files || [],
+                    sender: sender || 'coach'
                 });
                 return { ...c, progressHistory: history };
             }

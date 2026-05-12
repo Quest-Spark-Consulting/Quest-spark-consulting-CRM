@@ -3,10 +3,17 @@ let state = { role: null, clientData: null, view: 'dashboard', searchQuery: '', 
 
 // ===== HELPERS =====
 function fmtDT(iso) { const d = new Date(iso); return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
-function chatBubble(note, time, isClient) { return `<div class="chat-bubble ${isClient ? 'chat-client' : 'chat-coach'}"><div class="chat-text">${escapeHtml(note)}</div><div class="chat-time">${time}</div></div>`; }
+function chatBubble(note, time, isClient) { return `<div class="chat-bubble ${isClient ? 'chat-client' : 'chat-coach'}"><div class="chat-sender">${isClient ? 'You' : 'Coach'}</div><div class="chat-text">${escapeHtml(note)}</div><div class="chat-time">${time}</div></div>`; }
 function fileThumbs(files) { if (!files?.length) return ''; return `<div class="chat-files">${files.map(f => f.type.startsWith('image/') ? `<div class="chat-file-img"><img src="${f.data}" alt="${f.name}"><div class="chat-file-name">${f.name}</div></div>` : `<a href="${f.data}" download="${f.name}" class="chat-file-doc"><i class="bi bi-paperclip"></i> ${f.name}</a>`).join('')}</div>`; }
-function chatBubbleWithFiles(note, time, isClient, files) { return `<div class="chat-bubble ${isClient ? 'chat-client' : 'chat-coach'}"><div class="chat-text">${escapeHtml(note)}</div>${fileThumbs(files)}<div class="chat-time">${time}</div></div>`; }
+function chatBubbleWithFiles(note, time, isClient, files) { return `<div class="chat-bubble ${isClient ? 'chat-client' : 'chat-coach'}"><div class="chat-sender">${isClient ? 'You' : 'Coach'}</div><div class="chat-text">${escapeHtml(note)}</div>${fileThumbs(files)}<div class="chat-time">${time}</div></div>`; }
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+function senderLabel(sender) { return sender === 'client' ? 'You' : 'Coach'; }
+function bubbleFromEntry(h, isClientView) {
+    const side = h.sender === 'client';
+    const label = isClientView ? (h.sender === 'client' ? 'You' : 'Coach') : (h.sender === 'client' ? 'Client' : 'Coach');
+    return `<div class="chat-bubble ${side ? 'chat-client' : 'chat-coach'}"><div class="chat-sender">${label}</div><div class="chat-text">${escapeHtml(h.note)}</div>${fileThumbs(h.files)}<div class="chat-time">${fmtDT(h.date)}</div></div>`;
+}
 
 // ===== DOM REFS =====
 const $ = id => document.getElementById(id);
@@ -199,7 +206,7 @@ function clientCard(c) {
     const wa = `https://wa.me/${phone}?text=${encodeURIComponent('Hi ' + c.name + ', this is your coach. Hope you\'re doing well!')}`;
     const recent = c.progressHistory?.length > 0 ? c.progressHistory.slice(-2) : [];
     const chatHtml = recent.length > 0
-        ? `<div class="chat-preview">${recent.map(h => chatBubble(h.note, fmtDT(h.date), false)).join('')}</div>`
+        ? `<div class="chat-preview">${recent.map(h => bubbleFromEntry(h, false)).join('')}</div>`
         : '<p style="font-size:0.8rem;color:#94a3b8;margin-top:0.5rem">No messages yet.</p>';
     return `<div class="client-card" onclick="openClientDetail(${c.id})" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:flex-start" onclick="event.stopPropagation()">
@@ -237,8 +244,8 @@ function renderCoachChat(c) {
             </div>
             <div class="chat-messages" id="coach-chat-msgs">
                 ${all.map(h => h.type === 'note'
-                    ? chatBubbleWithFiles(h.note, fmtDT(h.date), false, h.files)
-                    : `<div class="chat-bubble chat-feedback"><div class="chat-text"><i class="bi bi-chat-square-text"></i> ${h.text}</div>${h.files?.length > 0 ? fileThumbs(h.files) : ''}<div class="chat-time">${fmtDT(h.date)}</div></div>`
+                    ? bubbleFromEntry(h, false)
+                    : `<div class="chat-bubble chat-feedback"><div class="chat-sender">Coach</div><div class="chat-text"><i class="bi bi-chat-square-text"></i> ${escapeHtml(h.text)}</div>${h.files?.length > 0 ? fileThumbs(h.files) : ''}<div class="chat-time">${fmtDT(h.date)}</div></div>`
                 ).join('')}
             </div>
             <form id="coach-chat-form" class="chat-input">
@@ -263,7 +270,7 @@ function renderCoachChat(c) {
             reader.readAsDataURL(f);
         }));
         Promise.all(readerPromises).then(() => {
-            db.addProgress(id, msg, files);
+            db.addProgress(id, msg, files, 'coach');
             state.data = db.load();
             const cl = state.data.find(x => x.id === id);
             if (cl) renderCoachChat(cl);
@@ -324,7 +331,7 @@ function renderCoachClientDetail(c) {
                         <div class="chat-header"><span><i class="bi bi-chat-dots"></i> Chat</span></div>
                         <div class="chat-messages" id="detail-chat-msgs">
                             ${hist.length === 0 ? '<p style="color:#94a3b8;text-align:center;padding:2rem">No messages yet.</p>' : ''}
-                            ${hist.map(h => chatBubbleWithFiles(h.note, fmtDT(h.date), false, h.files)).join('')}
+                            ${hist.map(h => bubbleFromEntry(h, false)).join('')}
                         </div>
                         <form id="detail-chat-form" class="chat-input">
                             <input type="text" id="detail-chat-msg" class="form-control" placeholder="Type a message..." autocomplete="off">
@@ -349,7 +356,7 @@ function renderCoachClientDetail(c) {
             reader.readAsDataURL(f);
         }));
         Promise.all(readerPromises).then(() => {
-            db.addProgress(c.id, msg, files);
+            db.addProgress(c.id, msg, files, 'coach');
             state.data = db.load();
             const cl = state.data.find(x => x.id === c.id);
             if (cl) renderCoachClientDetail(cl);
@@ -398,6 +405,7 @@ function clientRender(view) {
                 ${hist.length === 0 ? '<p class="text-muted">No feedback yet.</p>' : hist.slice().reverse().map(h => `
                     <div class="feedback-entry">
                         <div class="feedback-date">${fmtDT(h.date)}</div>
+                        <div style="font-size:0.75rem;font-weight:600;color:#5BB8E8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Coach</div>
                         <div class="feedback-text">${h.text}</div>
                         ${h.files?.length > 0 ? `<div class="feedback-files">${h.files.map(f =>
                             f.type.startsWith('image/')
@@ -415,7 +423,7 @@ function clientRender(view) {
                 <div class="chat-header"><span><i class="bi bi-chat-dots"></i> My Coaching Chat</span></div>
                 <div class="chat-messages" id="client-chat-msgs">
                     ${hist.length === 0 ? '<p style="color:#94a3b8;text-align:center;padding:2rem">No messages yet. Your coach will reach out here.</p>' : ''}
-                    ${hist.map(h => chatBubbleWithFiles(h.note, fmtDT(h.date), false, h.files)).join('')}
+                    ${hist.map(h => bubbleFromEntry(h, true)).join('')}
                 </div>
                 <form id="client-chat-form" class="chat-input">
                     <input type="text" id="client-chat-msg" class="form-control" placeholder="Type a message..." autocomplete="off">
@@ -437,7 +445,7 @@ function clientRender(view) {
                 reader.readAsDataURL(f);
             }));
             Promise.all(readerPromises).then(() => {
-                db.addProgress(state.clientData.id, msg, files);
+                db.addProgress(state.clientData.id, msg, files, 'client');
                 state.data = db.load();
                 state.clientData = state.data.find(x => x.id === state.clientData.id);
                 clientRender('my-progress');
@@ -505,7 +513,7 @@ $('progress-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const id = parseInt($('progress-client-id').value);
     const note = $('progress-note').value;
-    db.addProgress(id, note);
+    db.addProgress(id, note, [], 'coach');
     state.data = db.load();
     $('progress-modal').classList.add('d-none');
     if (state.role === 'coach') coachRender();
