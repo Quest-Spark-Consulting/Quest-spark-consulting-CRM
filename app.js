@@ -112,6 +112,7 @@ function coachRender() {
     if (state.view === 'dashboard') renderCoachDashboard(data);
     else if (state.view === 'leads') renderCoachList(data.filter(c => c.status === 'Lead'), 'Active Leads');
     else if (state.view === 'onboarded') renderCoachList(data.filter(c => c.status === 'Onboarded'), 'Onboarded Clients');
+    else if (state.view === 'converted') renderCoachList(data.filter(c => c.status === 'Converted'), 'Converted Clients');
     else if (state.view === 'industries') renderCoachIndustries(state.data);
     else if (state.view === 'reports') renderCoachReports(state.data);
     else if (state.view === 'feedback') renderCoachFeedback(state.data);
@@ -122,15 +123,15 @@ function coachRender() {
 function renderCoachDashboard(data) {
     const leads = data.filter(c => c.status === 'Lead').length;
     const onboarded = data.filter(c => c.status === 'Onboarded').length;
+    const converted = data.filter(c => c.status === 'Converted').length;
     const total = data.length;
-    const conv = total > 0 ? Math.round((onboarded / total) * 100) : 0;
     viewContainer.innerHTML = `
         <h4 class="page-title"><i class="bi bi-speedometer2"></i> Dashboard</h4>
         <div class="stats-row">
             <div class="stat-card"><div class="number">${total}</div><div class="label">Total Clients</div></div>
             <div class="stat-card blue"><div class="number">${leads}</div><div class="label">Active Leads</div></div>
             <div class="stat-card gold"><div class="number">${onboarded}</div><div class="label">Onboarded</div></div>
-            <div class="stat-card"><div class="number">${conv}%</div><div class="label">Conversion</div></div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#5BB8E8,#87CEEB);color:#1f2937"><div class="number">${converted}</div><div class="label">Converted</div></div>
         </div>
         <div class="section-header"><h2>Recent Clients</h2></div>
         <div class="grid">${data.slice().reverse().slice(0, 6).map(c => clientCard(c)).join('')}</div>
@@ -181,7 +182,7 @@ function renderCoachReports(data) {
             <tbody>${data.map(c => {
                 const last = c.progressHistory?.length > 0 ? c.progressHistory[c.progressHistory.length - 1] : null;
                 return `<tr><td><strong>${c.name}</strong></td><td>${c.industry}</td>
-                    <td><span class="badge ${c.status === 'Lead' ? 'badge-lead' : 'badge-onboarded'}">${c.status}</span></td>
+                    <td><span class="badge ${c.status === 'Lead' ? 'badge-lead' : c.status === 'Converted' ? 'badge-converted' : 'badge-onboarded'}">${c.status}</span></td>
                     <td style="font-size:0.85rem;color:#64748b">${last ? fmtDT(last.date) + ' — ' + last.note.substring(0,35)+'...' : 'No messages'}</td>
                     <td><button class="btn btn-sm btn-primary" onclick="openClientChat(${c.id})"><i class="bi bi-chat-dots"></i> Chat</button></td></tr>`;
             }).join('')}</tbody>
@@ -235,9 +236,10 @@ function clientCard(c) {
     const chatHtml = recent.length > 0
         ? `<div class="chat-preview">${recent.map(h => bubbleFromEntry(h, false)).join('')}</div>`
         : '<p style="font-size:0.8rem;color:#94a3b8;margin-top:0.5rem">No messages yet.</p>';
+    const badgeClass = c.status === 'Lead' ? 'badge-lead' : c.status === 'Converted' ? 'badge-converted' : 'badge-onboarded';
     return `<div class="client-card" onclick="openClientDetail(${c.id})" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:flex-start" onclick="event.stopPropagation()">
-            <span class="badge ${c.status === 'Lead' ? 'badge-lead' : 'badge-onboarded'}">${c.status}</span>
+            <span class="badge ${badgeClass}" style="cursor:pointer" onclick="quickStatus(${c.id})">${c.status} <i class="bi bi-chevron-down" style="font-size:0.6rem;margin-left:2px"></i></span>
             <div>
                 <button class="btn btn-sm btn-outline-primary" onclick="openClientChat(${c.id})" title="Chat"><i class="bi bi-chat-dots"></i></button>
                 <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();deleteClient(${c.id})" title="Delete"><i class="bi bi-trash"></i></button>
@@ -339,7 +341,7 @@ function renderCoachClientDetail(c) {
                         <p><strong>Name:</strong> ${c.name}</p>
                         <p><strong>Industry:</strong> ${c.industry}</p>
                         <p><strong>Phone:</strong> ${c.phone}</p>
-                        <p><strong>Status:</strong> <span class="badge ${c.status === 'Lead' ? 'badge-lead' : 'badge-onboarded'}">${c.status}</span></p>
+                        <p><strong>Status:</strong> <span class="badge ${c.status === 'Lead' ? 'badge-lead' : c.status === 'Converted' ? 'badge-converted' : 'badge-onboarded'}" style="cursor:pointer" onclick="quickStatus(${c.id})">${c.status} <i class="bi bi-chevron-down" style="font-size:0.6rem"></i></span></p>
                         ${c.notes ? `<p><strong>Notes:</strong> ${c.notes}</p>` : ''}
                         <p><strong>PIN:</strong> ${c.pin || '2020'}</p>
                         <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
@@ -517,6 +519,16 @@ $('feedback-files').addEventListener('change', function() {
 window.deleteClient = function(id) {
     if (confirm('Delete this client?')) {
         state.data = db.deleteClient(id);
+        coachRender();
+    }
+};
+
+window.quickStatus = function(id) {
+    const c = state.data.find(x => x.id === id);
+    if (!c) return;
+    const next = c.status === 'Lead' ? 'Onboarded' : c.status === 'Onboarded' ? 'Converted' : 'Lead';
+    if (confirm(`Change ${c.name} status from "${c.status}" to "${next}"?`)) {
+        state.data = db.updateClient(id, { status: next });
         coachRender();
     }
 };

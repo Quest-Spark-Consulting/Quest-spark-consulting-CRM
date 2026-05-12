@@ -62,6 +62,7 @@ body { background: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; marg
 .badge { font-weight:500; padding:0.25rem 0.6rem; border-radius:6px; font-size:0.75rem; }
 .badge-lead { background:#fef3c7; color:#92400e; }
 .badge-onboarded { background:#d1fae5; color:#065f46; }
+.badge-converted { background:#dbeafe; color:#1e40af; }
 
 /* Tables */
 .table-crm { width:100%; border-collapse:collapse; }
