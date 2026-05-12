@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Spark - Coaching CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="login-page d-none">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="bi bi-shield-check login-icon"></i>
+                <h2><span class="q">Q</span>uest <span class="s">S</span>park</h2>
+                <p class="text-muted">Micro-Coaching CRM</p>
+            </div>
+            <div class="login-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Coach Password</label>
+                    <div class="input-group">
+                        <input type="password" id="coach-password" class="form-control" placeholder="Enter coach password">
+                        <button class="btn btn-coach" onclick="loginAs('coach')"><i class="bi bi-person-badge"></i> Coach</button>
+                    </div>
+                    <div id="coach-login-error" class="text-danger small d-none mt-1">Incorrect coach password.</div>
+                </div>
+                <div class="divider"><span>or</span></div>
+                <p class="text-muted small mb-2">Client login — enter phone & PIN</p>
+                <div class="input-group mb-2">
+                    <input type="tel" id="client-phone-input" class="form-control" placeholder="Phone e.g. 0712345678">
+                </div>
+                <div class="input-group mb-3">
+                    <input type="password" id="client-pin-input" class="form-control" placeholder="Your PIN">
+                    <button class="btn btn-gold" onclick="loginAs('client')"><i class="bi bi-arrow-right"></i></button>
+                </div>
+                <div id="login-error" class="text-danger small d-none">Phone number or PIN incorrect. Try again.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <i class="bi bi-shield-check splash-icon"></i>
+            <h2>Welcome to <span class="q">Q</span>uest <span class="s">S</span>park</h2>
+            <p class="splash-tagline">Your JOURNEY COMPANION</p>
+            <div id="splash-detail" class="splash-detail"></div>
+            <div class="splash-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Coach App -->
+    <div id="coach-app" class="d-none">
+        <div class="app-container">
+            <aside class="sidebar">
+                <div class="logo">
+                    <i class="bi bi-shield-check"></i>
+                    <span><span class="q">Q</span>uest <span class="s">S</span>park</span>
+                </div>
+                <div class="user-info">
+                    <i class="bi bi-person-circle"></i> Coach
+                    <span class="badge bg-warning text-dark">Admin</span>
+                </div>
+                <hr>
+                <nav class="nav-menu">
+                    <a class="nav-item active" data-view="dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                    <a class="nav-item" data-view="leads"><i class="bi bi-people"></i> Leads</a>
+                    <a class="nav-item" data-view="onboarded"><i class="bi bi-person-check"></i> Onboarded</a>
+                    <a class="nav-item" data-view="industries"><i class="bi bi-building"></i> Industries</a>
+                    <a class="nav-item" data-view="reports"><i class="bi bi-file-text"></i> Reports</a>
+                    <a class="nav-item" data-view="feedback"><i class="bi bi-chat-square-text"></i> Feedback Hub</a>
+                </nav>
+                <div class="sidebar-footer">
+                    <button class="btn btn-sm btn-outline-light w-100" onclick="logout()">
+                        <i class="bi bi-box-arrow-left"></i> Logout
+                    </button>
+                </div>
+            </aside>
+            <main class="content">
+                <header class="top-bar">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="global-search" placeholder="Search clients...">
+                    </div>
+                    <button class="btn btn-gold" onclick="openAddModal()">
+                        <i class="bi bi-plus-lg"></i> Add Client
+                    </button>
+                </header>
+                <div id="view-container"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Client View -->
+    <div id="client-view" class="d-none">
+        <div class="app-container">
+            <aside class="sidebar">
+                <div class="logo">
+                    <i class="bi bi-shield-check"></i>
+                    <span><span class="q">Q</span>uest <span class="s">S</span>park</span>
+                </div>
+                <div class="user-info">
+                    <i class="bi bi-person-circle"></i> <span id="client-name-display"></span>
+                    <span class="badge bg-info">Client</span>
+                </div>
+                <hr>
+                <nav class="nav-menu">
+                    <a class="nav-item active" data-view="my-profile"><i class="bi bi-person"></i> My Profile</a>
+                    <a class="nav-item" data-view="my-progress"><i class="bi bi-graph-up"></i> My Progress</a>
+                    <a class="nav-item" data-view="my-feedback"><i class="bi bi-chat-square-text"></i> My Feedback</a>
+                </nav>
+                <div class="sidebar-footer">
+                    <button class="btn btn-sm btn-outline-light w-100" onclick="logout()">
+                        <i class="bi bi-box-arrow-left"></i> Logout
+                    </button>
+                </div>
+            </aside>
+            <main class="content">
+                <header class="top-bar">
+                    <h5 class="mb-0" style="color:#6B1D1D"><i class="bi bi-shield-check"></i> <span class="q">Q</span>uest <span class="s">S</span>park — Client Portal</h5>
+                </header>
+                <div id="client-view-container"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add/Edit Client Modal -->
+    <div id="client-modal" class="modal-overlay d-none">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h5 id="modal-title"><i class="bi bi-person-plus"></i> Add Client</h5>
+                <button class="btn-close" onclick="closeModal()"></button>
+            </div>
+            <form id="client-form" class="modal-body">
+                <input type="hidden" id="edit-id">
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Industry / Location</label>
+                    <input type="text" name="industry" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" name="phone" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Client PIN <small class="text-muted">(default: 2020)</small></label>
+                    <input type="text" name="pin" class="form-control" placeholder="2020" maxlength="10">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="Lead">Lead</option>
+                        <option value="Onboarded">Onboarded</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div id="progress-modal" class="modal-overlay d-none">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h5><i class="bi bi-chat-dots"></i> Add Progress Note</h5>
+                <button class="btn-close" onclick="closeProgressModal()"></button>
+            </div>
+            <form id="progress-form" class="modal-body">
+                <input type="hidden" id="progress-client-id">
+                <div class="mb-3">
+                    <label class="form-label">Weekly Discussion Notes</label>
+                    <textarea id="progress-note" class="form-control" rows="4" required></textarea>
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-secondary" onclick="closeProgressModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal-overlay d-none">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h5><i class="bi bi-chat-square-text"></i> Send Feedback</h5>
+                <button class="btn-close" onclick="closeFeedbackModal()"></button>
+            </div>
+            <form id="feedback-form" class="modal-body">
+                <input type="hidden" id="feedback-client-id">
+                <div class="mb-3">
+                    <label class="form-label">Feedback Message</label>
+                    <textarea id="feedback-text" class="form-control" rows="4" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Attach Files / Images</label>
+                    <input type="file" id="feedback-files" class="form-control" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+                    <div id="feedback-file-list" class="mt-2 small text-muted"></div>
+                </div>
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="button" class="btn btn-secondary" onclick="closeFeedbackModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
