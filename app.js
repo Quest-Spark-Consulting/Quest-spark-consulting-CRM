@@ -311,6 +311,8 @@ function renderCoachChat(c) {
             const id = parseInt($('coach-chat-id').value);
             const msg = $('coach-chat-msg').value.trim();
             const fileInput = $('coach-chat-files');
+            $('coach-chat-msg').value = '';
+            fileInput.value = '';
             const files = [];
             const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
                 const reader = new FileReader();
@@ -318,11 +320,14 @@ function renderCoachChat(c) {
                 reader.readAsDataURL(f);
             }));
             Promise.all(readerPromises).then(() => {
-                db.addProgress(id, msg, files, 'coach').then(data => {
-                    state.data = data;
-                    const cl = data.find(x => x.id === id);
-                    if (cl) renderCoachChat(cl);
+                db.addProgress(id, msg, files, 'coach');
+                state.data.forEach(c => {
+                    if (c.id === id) {
+                        c.progressHistory.push({ date: new Date().toISOString(), note: msg, files, sender: 'coach' });
+                    }
                 });
+                const cl = state.data.find(x => x.id === id);
+                if (cl) renderCoachChat(cl);
             });
         });
     }
@@ -402,6 +407,8 @@ function renderCoachClientDetail(c) {
             e.preventDefault();
             const msg = $('detail-chat-msg').value.trim();
             const fileInput = $('detail-chat-files');
+            $('detail-chat-msg').value = '';
+            fileInput.value = '';
             const files = [];
             const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
                 const reader = new FileReader();
@@ -409,11 +416,14 @@ function renderCoachClientDetail(c) {
                 reader.readAsDataURL(f);
             }));
             Promise.all(readerPromises).then(() => {
-                db.addProgress(c.id, msg, files, 'coach').then(data => {
-                    state.data = data;
-                    const cl = data.find(x => x.id === c.id);
-                    if (cl) renderCoachClientDetail(cl);
+                db.addProgress(c.id, msg, files, 'coach');
+                state.data.forEach(x => {
+                    if (x.id === c.id) {
+                        x.progressHistory.push({ date: new Date().toISOString(), note: msg, files, sender: 'coach' });
+                    }
                 });
+                const cl = state.data.find(x => x.id === c.id);
+                if (cl) renderCoachClientDetail(cl);
             });
         });
     }
@@ -496,6 +506,8 @@ function clientRender(view) {
                 e.preventDefault();
                 const msg = $('client-chat-msg').value.trim();
                 const fileInput = $('client-chat-files');
+                $('client-chat-msg').value = '';
+                fileInput.value = '';
                 const files = [];
                 const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
                     const reader = new FileReader();
@@ -503,11 +515,14 @@ function clientRender(view) {
                     reader.readAsDataURL(f);
                 }));
                 Promise.all(readerPromises).then(() => {
-                    db.addProgress(state.clientData.id, msg, files, 'client').then(data => {
-                        state.data = data;
-                        state.clientData = data.find(x => x.id === state.clientData.id);
-                        clientRender('my-progress');
+                    db.addProgress(state.clientData.id, msg, files, 'client');
+                    state.data.forEach(x => {
+                        if (x.id === state.clientData.id) {
+                            x.progressHistory.push({ date: new Date().toISOString(), note: msg, files, sender: 'client' });
+                        }
                     });
+                    state.clientData = state.data.find(x => x.id === state.clientData.id);
+                    clientRender('my-progress');
                 });
             });
         }
