@@ -95,7 +95,24 @@ const db = {
                     date: new Date().toISOString(),
                     note: note,
                     files: files || [],
-                    sender: sender || 'coach'
+                    sender: sender || 'coach',
+                    read: false
+                });
+                return { ...c, progressHistory: history };
+            }
+            return c;
+        });
+        await this.save(data);
+        return data;
+    },
+
+    async markRead(clientId) {
+        let data = this.load();
+        data = data.map(c => {
+            if (c.id === clientId) {
+                const history = (c.progressHistory || []).map(h => {
+                    if (h.sender === 'coach' && !h.read) return { ...h, read: true };
+                    return h;
                 });
                 return { ...c, progressHistory: history };
             }

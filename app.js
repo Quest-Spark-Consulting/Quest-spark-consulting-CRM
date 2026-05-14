@@ -12,7 +12,8 @@ function senderLabel(sender) { return sender === 'client' ? 'You' : 'Coach'; }
 function bubbleFromEntry(h, isClientView) {
     const side = h.sender === 'client';
     const label = isClientView ? (h.sender === 'client' ? 'You' : 'Coach') : (h.sender === 'client' ? 'Client' : 'Coach');
-    return `<div class="chat-bubble ${side ? 'chat-client' : 'chat-coach'}"><div class="chat-sender">${label}</div><div class="chat-text">${escapeHtml(h.note)}</div>${fileThumbs(h.files)}<div class="chat-time">${fmtDT(h.date)}</div></div>`;
+    const readIcon = !isClientView && h.sender === 'coach' ? `<span class="read-tick ${h.read ? 'read' : 'unread'}"><i class="bi bi-check${h.read ? '-all' : ''}"></i></span>` : '';
+    return `<div class="chat-bubble ${side ? 'chat-client' : 'chat-coach'}"><div class="chat-sender">${label}</div><div class="chat-text">${escapeHtml(h.note)}</div>${fileThumbs(h.files)}<div class="chat-time">${readIcon}${fmtDT(h.date)}</div></div>`;
 }
 
 // ===== DOM REFS =====
@@ -419,7 +420,7 @@ function renderCoachClientDetail(c) {
                 db.addProgress(c.id, msg, files, 'coach');
                 state.data.forEach(x => {
                     if (x.id === c.id) {
-                        x.progressHistory.push({ date: new Date().toISOString(), note: msg, files, sender: 'coach' });
+                            x.progressHistory.push({ date: new Date().toISOString(), note: msg, files, sender: 'coach', read: false });
                     }
                 });
                 const cl = state.data.find(x => x.id === c.id);
@@ -497,6 +498,7 @@ function clientRender(view) {
                 </form>
             </div>
         `;
+        db.markRead(c.id);
         const msgs = $('client-chat-msgs');
         if (msgs) msgs.scrollTop = msgs.scrollHeight;
         const chatForm3 = $('client-chat-form');
@@ -518,7 +520,7 @@ function clientRender(view) {
                     db.addProgress(state.clientData.id, msg, files, 'client');
                     state.data.forEach(x => {
                         if (x.id === state.clientData.id) {
-                            x.progressHistory.push({ date: new Date().toISOString(), note: msg, files, sender: 'client' });
+                            x.progressHistory.push({ date: new Date().toISOString(), note: msg, files, sender: 'client', read: false });
                         }
                     });
                     state.clientData = state.data.find(x => x.id === state.clientData.id);
