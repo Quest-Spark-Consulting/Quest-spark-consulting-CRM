@@ -24,17 +24,19 @@ const viewContainer = $('view-container');
 const clientViewContainer = $('client-view-container');
 
 // ===== SPLASH ON LOAD =====
-window.addEventListener('DOMContentLoaded', async () => {
-    state.data = await db.loadRemote();
-    db.subscribe();
-    db.onSync((newData) => {
-        state.data = newData;
-        if (state.role === 'coach') coachRender();
-        else if (state.role === 'client' && state.clientData) {
-            state.clientData = state.data.find(c => c.id === state.clientData.id);
-            clientRender(state.view || 'my-profile');
-        }
-    });
+window.addEventListener('DOMContentLoaded', () => {
+    db.loadRemote().then(data => {
+        state.data = data;
+        db.subscribe();
+        db.onSync((newData) => {
+            state.data = newData;
+            if (state.role === 'coach') coachRender();
+            else if (state.role === 'client' && state.clientData) {
+                state.clientData = state.data.find(c => c.id === state.clientData.id);
+                clientRender(state.view || 'my-profile');
+            }
+        });
+    }).catch(() => { state.data = db.load(); });
     setTimeout(() => {
         $('splash-screen').classList.add('d-none');
         loginPage.classList.remove('d-none');
