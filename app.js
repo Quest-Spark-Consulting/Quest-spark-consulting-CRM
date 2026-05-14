@@ -4,7 +4,7 @@ let state = { role: null, clientData: null, view: 'dashboard', searchQuery: '', 
 // ===== HELPERS =====
 function fmtDT(iso) { const d = new Date(iso); return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
 function chatBubble(note, time, isClient) { return `<div class="chat-bubble ${isClient ? 'chat-client' : 'chat-coach'}"><div class="chat-sender">${isClient ? 'You' : 'Coach'}</div><div class="chat-text">${escapeHtml(note)}</div><div class="chat-time">${time}</div></div>`; }
-function fileThumbs(files) { if (!files?.length) return ''; return `<div class="chat-files">${files.map(f => f.type.startsWith('image/') ? `<div class="chat-file-img"><img src="${f.data}" alt="${f.name}"><div class="chat-file-name">${f.name}</div></div>` : `<a href="${f.data}" download="${f.name}" class="chat-file-doc"><i class="bi bi-paperclip"></i> ${f.name}</a>`).join('')}</div>`; }
+function fileThumbs(files) { if (!files?.length) return ''; return `<div class="chat-files">${files.map(f => f.type.startsWith('image/') ? `<div class="chat-file-img"><img src="${f.data}" alt="${f.name}"><a href="${f.data}" download="${f.name}" class="chat-file-download"><i class="bi bi-download"></i></a><div class="chat-file-name">${f.name}</div></div>` : `<a href="${f.data}" download="${f.name}" class="chat-file-doc"><i class="bi bi-paperclip"></i> ${f.name}</a>`).join('')}</div>`; }
 function chatBubbleWithFiles(note, time, isClient, files) { return `<div class="chat-bubble ${isClient ? 'chat-client' : 'chat-coach'}"><div class="chat-sender">${isClient ? 'You' : 'Coach'}</div><div class="chat-text">${escapeHtml(note)}</div>${fileThumbs(files)}<div class="chat-time">${time}</div></div>`; }
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
@@ -369,7 +369,7 @@ function renderCoachClientDetail(c) {
                     </div></div>
                     ${fb.length > 0 ? `<div class="card-crm"><div class="card-header"><i class="bi bi-chat-square-text"></i> Recent Feedback</div>
                     <div class="card-body p-3">${fb.slice(-3).reverse().map(h => `
-                        <div class="feedback-entry"><div class="feedback-date">${fmtDT(h.date)}</div><div class="feedback-text">${h.text}</div></div>
+                        <div class="feedback-entry"><div class="feedback-date">${fmtDT(h.date)}</div><div class="feedback-text">${h.text}</div>${h.files?.length > 0 ? fileThumbs(h.files) : ''}</div>
                     `).join('')}</div></div>` : ''}
                 </div>
                 <div class="detail-chat">
@@ -456,7 +456,7 @@ function clientRender(view) {
                         <div class="feedback-text">${h.text}</div>
                         ${h.files?.length > 0 ? `<div class="feedback-files">${h.files.map(f =>
                             f.type.startsWith('image/')
-                                ? `<div class="file-preview"><img src="${f.data}" alt="${f.name}"><div class="file-name">${f.name}</div></div>`
+                                ? `<div class="file-preview"><img src="${f.data}" alt="${f.name}"><a href="${f.data}" download="${f.name}" class="file-download-link"><i class="bi bi-download"></i></a><div class="file-name">${f.name}</div></div>`
                                 : `<div class="file-preview file-doc"><i class="bi bi-paperclip"></i> <a href="${f.data}" download="${f.name}">${f.name}</a></div>`
                         ).join('')}</div>` : ''}
                     </div>
