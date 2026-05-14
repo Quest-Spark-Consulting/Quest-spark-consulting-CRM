@@ -303,25 +303,29 @@ function renderCoachChat(c) {
     `;
     const msgs = $('coach-chat-msgs');
     if (msgs) msgs.scrollTop = msgs.scrollHeight;
-    $('coach-chat-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = parseInt($('coach-chat-id').value);
-        const msg = $('coach-chat-msg').value.trim();
-        const fileInput = $('coach-chat-files');
-        const files = [];
-        const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = () => { files.push({ name: f.name, type: f.type, data: reader.result }); resolve(); };
-            reader.readAsDataURL(f);
-        }));
-        Promise.all(readerPromises).then(() => {
-            db.addProgress(id, msg, files, 'coach').then(() => db.loadRemote()).then(data => {
-                state.data = data;
-                const cl = data.find(x => x.id === id);
-                if (cl) renderCoachChat(cl);
+    const chatForm2 = $('coach-chat-form');
+    if (chatForm2.getAttribute('data-listener') !== '1') {
+        chatForm2.setAttribute('data-listener', '1');
+        chatForm2.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = parseInt($('coach-chat-id').value);
+            const msg = $('coach-chat-msg').value.trim();
+            const fileInput = $('coach-chat-files');
+            const files = [];
+            const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => { files.push({ name: f.name, type: f.type, data: reader.result }); resolve(); };
+                reader.readAsDataURL(f);
+            }));
+            Promise.all(readerPromises).then(() => {
+                db.addProgress(id, msg, files, 'coach').then(data => {
+                    state.data = data;
+                    const cl = data.find(x => x.id === id);
+                    if (cl) renderCoachChat(cl);
+                });
             });
         });
-    });
+    }
 }
 
 window.backToPrevView = function() {
@@ -391,24 +395,28 @@ function renderCoachClientDetail(c) {
     `;
     const msgs = $('detail-chat-msgs');
     if (msgs) msgs.scrollTop = msgs.scrollHeight;
-    $('detail-chat-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const msg = $('detail-chat-msg').value.trim();
-        const fileInput = $('detail-chat-files');
-        const files = [];
-        const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = () => { files.push({ name: f.name, type: f.type, data: reader.result }); resolve(); };
-            reader.readAsDataURL(f);
-        }));
-        Promise.all(readerPromises).then(() => {
-            db.addProgress(c.id, msg, files, 'coach').then(() => db.loadRemote()).then(data => {
-                state.data = data;
-                const cl = data.find(x => x.id === c.id);
-                if (cl) renderCoachClientDetail(cl);
+    const chatForm = $('detail-chat-form');
+    if (chatForm.getAttribute('data-listener') !== '1') {
+        chatForm.setAttribute('data-listener', '1');
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const msg = $('detail-chat-msg').value.trim();
+            const fileInput = $('detail-chat-files');
+            const files = [];
+            const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = () => { files.push({ name: f.name, type: f.type, data: reader.result }); resolve(); };
+                reader.readAsDataURL(f);
+            }));
+            Promise.all(readerPromises).then(() => {
+                db.addProgress(c.id, msg, files, 'coach').then(data => {
+                    state.data = data;
+                    const cl = data.find(x => x.id === c.id);
+                    if (cl) renderCoachClientDetail(cl);
+                });
             });
         });
-    });
+    }
 }
 
 // ===== CLIENT =====
@@ -481,24 +489,28 @@ function clientRender(view) {
         `;
         const msgs = $('client-chat-msgs');
         if (msgs) msgs.scrollTop = msgs.scrollHeight;
-        $('client-chat-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const msg = $('client-chat-msg').value.trim();
-            const fileInput = $('client-chat-files');
-            const files = [];
-            const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onload = () => { files.push({ name: f.name, type: f.type, data: reader.result }); resolve(); };
-                reader.readAsDataURL(f);
-            }));
-            Promise.all(readerPromises).then(() => {
-                db.addProgress(state.clientData.id, msg, files, 'client').then(() => db.loadRemote()).then(data => {
-                    state.data = data;
-                    state.clientData = data.find(x => x.id === state.clientData.id);
-                    clientRender('my-progress');
+        const chatForm3 = $('client-chat-form');
+        if (chatForm3 && chatForm3.getAttribute('data-listener') !== '1') {
+            chatForm3.setAttribute('data-listener', '1');
+            chatForm3.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const msg = $('client-chat-msg').value.trim();
+                const fileInput = $('client-chat-files');
+                const files = [];
+                const readerPromises = Array.from(fileInput.files).map(f => new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = () => { files.push({ name: f.name, type: f.type, data: reader.result }); resolve(); };
+                    reader.readAsDataURL(f);
+                }));
+                Promise.all(readerPromises).then(() => {
+                    db.addProgress(state.clientData.id, msg, files, 'client').then(data => {
+                        state.data = data;
+                        state.clientData = data.find(x => x.id === state.clientData.id);
+                        clientRender('my-progress');
+                    });
                 });
             });
-        });
+        }
     }
 }
 
@@ -556,7 +568,7 @@ $('client-form').addEventListener('submit', (e) => {
     const fd = new FormData($('client-form'));
     const editId = $('edit-id').value;
     const save = editId ? db.updateClient(parseInt(editId), Object.fromEntries(fd)) : db.addClient(Object.fromEntries(fd));
-    save.then(() => db.loadRemote()).then(data => {
+    save.then(data => {
         state.data = data;
         $('client-modal').classList.add('d-none');
         coachRender();
@@ -567,7 +579,7 @@ $('progress-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const id = parseInt($('progress-client-id').value);
     const note = $('progress-note').value;
-    db.addProgress(id, note, [], 'coach').then(() => db.loadRemote()).then(data => {
+    db.addProgress(id, note, [], 'coach').then(data => {
         state.data = data;
         $('progress-modal').classList.add('d-none');
         if (state.role === 'coach') coachRender();
@@ -590,7 +602,7 @@ $('feedback-form').addEventListener('submit', (e) => {
         reader.readAsDataURL(f);
     }));
     Promise.all(readerPromises).then(() => {
-        db.addFeedback(id, text, files).then(() => db.loadRemote()).then(data => {
+        db.addFeedback(id, text, files).then(data => {
             state.data = data;
             $('feedback-modal').classList.add('d-none');
             if (state.role === 'coach') coachRender();

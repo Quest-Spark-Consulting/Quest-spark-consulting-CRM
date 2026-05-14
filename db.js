@@ -76,7 +76,7 @@ const db = {
         };
         data.push(newClient);
         await this.save(data);
-        return newClient;
+        return data;
     },
 
     async updateClient(id, updates) {
