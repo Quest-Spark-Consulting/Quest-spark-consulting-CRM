@@ -221,6 +221,14 @@
         </div>
     </div>
 
+    <script>
+      setTimeout(function(){
+        var el = document.getElementById('splash-screen');
+        if (el) el.classList.add('d-none');
+        var login = document.getElementById('login-page');
+        if (login) login.classList.remove('d-none');
+      }, 3500);
+    </script>
     <script src="db.js"></script>
     <script src="app.js"></script>
 </body>
