@@ -28,6 +28,7 @@ window.addEventListener('DOMContentLoaded', () => {
     db.loadRemote().then(data => {
         state.data = data;
         db.subscribe();
+        db.save(data);
         db.onSync((newData) => {
             state.data = newData;
             if (state.role === 'coach') coachRender();
@@ -36,7 +37,10 @@ window.addEventListener('DOMContentLoaded', () => {
                 clientRender(state.view || 'my-profile');
             }
         });
-    }).catch(() => { state.data = db.load(); });
+    }).catch(() => {
+        state.data = db.load();
+        db.save(state.data);
+    });
     setTimeout(() => {
         $('splash-screen').classList.add('d-none');
         loginPage.classList.remove('d-none');

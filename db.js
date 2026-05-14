@@ -39,13 +39,15 @@ const db = {
     load() {
         const data = localStorage.getItem('crm_data');
         if (!data) return INITIAL_DATA;
-        return normalize(JSON.parse(data));
+        const parsed = JSON.parse(data);
+        if (!parsed || parsed.length === 0) return INITIAL_DATA;
+        return normalize(parsed);
     },
 
     async loadRemote() {
         try {
             const { data: row } = await _sb.from('app_data').select('data').eq('id', 1).single();
-            if (row?.data) {
+            if (row?.data && Array.isArray(row.data) && row.data.length > 0) {
                 localStorage.setItem('crm_data', JSON.stringify(row.data));
                 return normalize(row.data);
             }
