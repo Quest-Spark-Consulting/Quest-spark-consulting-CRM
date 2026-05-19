@@ -628,7 +628,6 @@ $('feedback-form').addEventListener('submit', (e) => {
                 if (state.role === 'coach') coachRender();
                 else { state.clientData = state.data.find(c => c.id === id); clientRender('my-feedback'); }
             });
-        });
     });
 });
 
