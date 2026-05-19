@@ -25,7 +25,7 @@ function normalize(data) {
 
 function wrap(data) {
     if (data && typeof data === 'object' && !Array.isArray(data) && 'clients' in data) return data;
-    return { clients: Array.isArray(data) ? data : [], invoices: [] };
+    return { clients: Array.isArray(data) ? data : [], invoices: [], quotations: [] };
 }
 
 function unwrap(wrapped) {
@@ -86,6 +86,29 @@ const db = {
         w.invoices = (w.invoices || []).filter(i => i.id !== id);
         await this._saveWrapped(w);
         return w.invoices;
+    },
+
+    getQuotations() {
+        const w = this._getWrapped();
+        return w.quotations || [];
+    },
+
+    async saveQuotation(q) {
+        const w = this._getWrapped();
+        const qs = w.quotations || [];
+        const idx = qs.findIndex(i => i.id === q.id);
+        if (idx >= 0) qs[idx] = q;
+        else qs.push(q);
+        w.quotations = qs;
+        await this._saveWrapped(w);
+        return qs;
+    },
+
+    async deleteQuotation(id) {
+        const w = this._getWrapped();
+        w.quotations = (w.quotations || []).filter(i => i.id !== id);
+        await this._saveWrapped(w);
+        return w.quotations;
     },
 
     async loadRemote() {

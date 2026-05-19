@@ -134,6 +134,7 @@ function coachRender() {
     else if (state.view === 'industries') renderCoachIndustries(state.data);
     else if (state.view === 'reports') renderCoachReports(state.data);
     else if (state.view === 'feedback') renderCoachFeedback(state.data);
+    else if (state.view === 'quotations') renderCoachQuotations();
     else if (state.view === 'invoices') renderCoachInvoices();
     else if (state.view === 'chat') { const c = state.data.find(x => x.id === state.chatClientId); if (c) renderCoachChat(c); }
     else if (state.view === 'client-detail') { const c = state.data.find(x => x.id === state.clientDetailId); if (c) renderCoachClientDetail(c); }
@@ -888,5 +889,268 @@ window.deleteInvoice = function(id) {
     db.deleteInvoice(id).then(() => coachRender());
 };
 
+// ===== QUOTATIONS =====
+function renderCoachQuotations() {
+    const qs = db.getQuotations();
+    const clients = state.data;
+    let html = `
+        <div class="page-header">
+            <h3><i class="bi bi-file-text"></i> Quotations</h3>
+            <button class="btn btn-primary" onclick="openNewQuotation()"><i class="bi bi-plus-lg"></i> New Quotation</button>
+        </div>
+        <div class="card"><div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Quote #</th><th>Date</th><th>Client</th><th>Amount</th><th>Valid Until</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+    `;
+    if (qs.length === 0) {
+        html += '<tr><td colspan="7" class="text-center py-4" style="color:#94a3b8">No quotations yet.</td></tr>';
+    } else {
+        [...qs].reverse().forEach(q => {
+            const client = clients.find(c => c.id === q.clientId);
+            const badge = q.status === 'approved' ? 'bg-success' : q.status === 'rejected' ? 'bg-danger' : q.status === 'sent' ? 'bg-primary' : 'bg-secondary';
+            html += `<tr>
+                <td><strong>${escapeHtml(q.quoteNumber)}</strong></td>
+                <td>${q.date}</td>
+                <td>${client ? escapeHtml(client.name) : '—'}</td>
+                <td>KSh ${Number(q.total).toLocaleString()}</td>
+                <td>${q.validUntil || '—'}</td>
+                <td><span class="badge ${badge}">${q.status}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewQuotation(${q.id})"><i class="bi bi-eye"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteQuotation(${q.id})"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+    }
+    html += `</tbody></table></div></div>`;
+    viewContainer.innerHTML = html;
+}
+
+window.openNewQuotation = function() {
+    const clients = state.data;
+    const nextNum = String(db.getQuotations().length + 1).padStart(3, '0');
+    const html = `
+        <div class="modal-overlay" id="quote-modal"><div class="modal-card" style="max-width:700px">
+            <div class="modal-header"><span><i class="bi bi-file-text"></i> New Quotation</span>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="q-id" value="0">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Quote Number</label>
+                        <input type="text" id="q-number" class="form-control" value="QTN-${nextNum}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="q-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Valid Until</label>
+                        <input type="date" id="q-valid" class="form-control" value="${new Date(Date.now() + 30*86400000).toISOString().split('T')[0]}">
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-md-12">
+                        <label class="form-label">Client</label>
+                        <select id="q-client" class="form-select">
+                            <option value="">Select client...</option>
+                            ${clients.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <hr>
+                <label class="form-label">Services</label>
+                <div id="q-services">
+                    <div class="row g-2 mb-2 q-service-row">
+                        <div class="col-md-5"><input type="text" class="form-control form-control-sm q-desc" placeholder="Description"></div>
+                        <div class="col-md-2"><input type="number" class="form-control form-control-sm q-rate" placeholder="Rate" value="0"></div>
+                        <div class="col-md-2"><input type="number" class="form-control form-control-sm q-hours" placeholder="Hours" value="0"></div>
+                        <div class="col-md-2"><input type="text" class="form-control form-control-sm q-amount" placeholder="Amount" readonly></div>
+                        <div class="col-md-1"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.q-service-row').remove(); calcQTotal();"><i class="bi bi-x"></i></button></div>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary mb-3" onclick="addQServiceRow()"><i class="bi bi-plus"></i> Add Service</button>
+                <div class="row mt-2">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="d-flex justify-content-between"><span>Subtotal:</span><span id="q-subtotal">KSh 0</span></div>
+                        <div class="d-flex justify-content-between mt-1"><span>Total:</span><strong id="q-total">KSh 0</strong></div>
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-2">
+                    <label class="form-label">Status</label>
+                    <select id="q-status" class="form-select">
+                        <option value="draft">Draft</option>
+                        <option value="sent">Sent</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Notes</label>
+                    <textarea id="q-notes" class="form-control" rows="2" placeholder="Terms, conditions..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveQuotation()"><i class="bi bi-check-lg"></i> Save Quotation</button>
+            </div>
+        </div></div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.querySelectorAll('.q-rate, .q-hours').forEach(el => {
+        el.addEventListener('input', calcQTotal);
     });
-});
+};
+
+window.addQServiceRow = function() {
+    const row = document.createElement('div');
+    row.className = 'row g-2 mb-2 q-service-row';
+    row.innerHTML = `
+        <div class="col-md-5"><input type="text" class="form-control form-control-sm q-desc" placeholder="Description"></div>
+        <div class="col-md-2"><input type="number" class="form-control form-control-sm q-rate" placeholder="Rate" value="0"></div>
+        <div class="col-md-2"><input type="number" class="form-control form-control-sm q-hours" placeholder="Hours" value="0"></div>
+        <div class="col-md-2"><input type="text" class="form-control form-control-sm q-amount" placeholder="Amount" readonly></div>
+        <div class="col-md-1"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.q-service-row').remove(); calcQTotal();"><i class="bi bi-x"></i></button></div>
+    `;
+    document.getElementById('q-services').appendChild(row);
+    row.querySelectorAll('.q-rate, .q-hours').forEach(el => el.addEventListener('input', calcQTotal));
+};
+
+window.calcQTotal = function() {
+    let subtotal = 0;
+    document.querySelectorAll('.q-service-row').forEach(row => {
+        const rate = parseFloat(row.querySelector('.q-rate').value) || 0;
+        const hours = parseFloat(row.querySelector('.q-hours').value) || 0;
+        const amount = rate * hours;
+        row.querySelector('.q-amount').value = amount.toLocaleString();
+        subtotal += amount;
+    });
+    document.getElementById('q-subtotal').textContent = 'KSh ' + subtotal.toLocaleString();
+    document.getElementById('q-total').textContent = 'KSh ' + subtotal.toLocaleString();
+};
+
+window.saveQuotation = function() {
+    const id = parseInt(document.getElementById('q-id').value) || Date.now();
+    const q = {
+        id,
+        quoteNumber: document.getElementById('q-number').value.trim() || 'QTN-001',
+        date: document.getElementById('q-date').value,
+        validUntil: document.getElementById('q-valid').value,
+        clientId: parseInt(document.getElementById('q-client').value),
+        services: [],
+        subtotal: 0,
+        total: 0,
+        status: document.getElementById('q-status').value,
+        notes: document.getElementById('q-notes').value.trim()
+    };
+    if (!q.clientId) { alert('Please select a client.'); return; }
+    document.querySelectorAll('.q-service-row').forEach(row => {
+        const desc = row.querySelector('.q-desc').value.trim();
+        const rate = parseFloat(row.querySelector('.q-rate').value) || 0;
+        const hours = parseFloat(row.querySelector('.q-hours').value) || 0;
+        if (desc) {
+            q.services.push({ description: desc, rate, hours, amount: rate * hours });
+            q.subtotal += rate * hours;
+        }
+    });
+    if (q.services.length === 0) { alert('Add at least one service.'); return; }
+    q.total = q.subtotal;
+    db.saveQuotation(q).then(() => {
+        document.getElementById('quote-modal')?.closest('.modal-overlay')?.remove();
+        coachRender();
+    });
+};
+
+window.viewQuotation = function(id) {
+    const q = db.getQuotations().find(i => i.id === id);
+    if (!q) return;
+    const client = state.data.find(c => c.id === q.clientId);
+    const badge = q.status === 'approved' ? 'bg-success' : q.status === 'rejected' ? 'bg-danger' : q.status === 'sent' ? 'bg-primary' : 'bg-secondary';
+    viewContainer.innerHTML = `
+        <div class="page-header">
+            <h3><i class="bi bi-file-text"></i> Quotation</h3>
+            <div>
+                <button class="btn btn-outline-secondary" onclick="coachRender()"><i class="bi bi-arrow-left"></i> Back</button>
+                <button class="btn btn-outline-primary" onclick="printQuotation()"><i class="bi bi-printer"></i> Print</button>
+                <button class="btn btn-primary" onclick="exportQuotationPDF()"><i class="bi bi-file-pdf"></i> Export PDF</button>
+            </div>
+        </div>
+        <div class="card" id="quote-print-area">
+            <div class="card-body p-4">
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <h2 style="color:#6B1414;font-weight:800;font-size:1.8rem">Powering House</h2>
+                        <p style="color:#64748b;font-size:0.85rem;margin:0">Coaching & Consulting</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <h3 style="color:#6B1414;font-weight:700">${escapeHtml(q.quoteNumber)}</h3>
+                        <p style="margin:0">Date: ${q.date}</p>
+                        ${q.validUntil ? `<p style="margin:0">Valid Until: ${q.validUntil}</p>` : ''}
+                        <span class="badge ${badge}" style="font-size:0.85rem">${q.status.toUpperCase()}</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <strong>Prepared For:</strong>
+                        <p style="margin:2px 0">${client ? escapeHtml(client.name) : '—'}</p>
+                        <p style="margin:2px 0">${client ? escapeHtml(client.phone) : ''}</p>
+                        <p style="margin:2px 0">${client ? escapeHtml(client.industry) : ''}</p>
+                    </div>
+                </div>
+                <table class="table table-bordered">
+                    <thead style="background:#6B1414;color:#fff">
+                        <tr><th>Description</th><th style="width:100px">Rate (KSh)</th><th style="width:80px">Hours</th><th style="width:120px">Amount (KSh)</th></tr>
+                    </thead>
+                    <tbody>
+                        ${q.services.map(s => `
+                            <tr>
+                                <td>${escapeHtml(s.description)}</td>
+                                <td>${Number(s.rate).toLocaleString()}</td>
+                                <td>${s.hours}</td>
+                                <td class="text-end">${Number(s.amount).toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr><td colspan="3" class="text-end"><strong>Total</strong></td><td class="text-end"><strong>KSh ${Number(q.total).toLocaleString()}</strong></td></tr>
+                    </tfoot>
+                </table>
+                ${q.notes ? `<div class="mt-3 p-3" style="background:#f8f9fa;border-radius:8px"><strong>Terms & Notes:</strong><br>${escapeHtml(q.notes)}</div>` : ''}
+                <div class="mt-4 text-center" style="color:#94a3b8;font-size:0.8rem;border-top:1px solid #e5e7eb;padding-top:1rem">
+                    Powered by Quest Spark &middot; Powering House CRM
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+window.printQuotation = function() {
+    const content = document.getElementById('quote-print-area')?.innerHTML;
+    if (!content) return;
+    const w = window.open('', '', 'width=800,height=600');
+    w.document.write(`
+        <html><head><title>Quotation</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <style>body{padding:2rem;font-family:'Segoe UI',sans-serif}table{width:100%}th{background:#6B1414;color:#fff;padding:8px}td{padding:6px 8px}</style>
+        </head><body>${content}</body></html>
+    `);
+    w.document.close();
+    setTimeout(() => { w.print(); w.close(); }, 500);
+};
+
+window.exportQuotationPDF = function() {
+    const el = document.getElementById('quote-print-area');
+    if (!el) return;
+    const qNum = el.querySelector('h3')?.textContent || 'Quotation';
+    const opt = { margin: 0.5, filename: qNum.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+    html2pdf().set(opt).from(el).save();
+};
+
+window.deleteQuotation = function(id) {
+    if (!confirm('Delete this quotation?')) return;
+    db.deleteQuotation(id).then(() => coachRender());
+};
