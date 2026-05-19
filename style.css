@@ -135,10 +135,8 @@ body { background: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; marg
 /* Splash */
 .splash-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#6B1D1D 0%,#4A1010 50%,#2D0A0A 100%); display:flex; align-items:center; justify-content:center; z-index:9999; }
 .splash-content { text-align:center; color:#fff; animation:modalIn .6s ease; }
-.splash-icon { font-size:5rem; background:linear-gradient(135deg,#fff 50%,#5BB8E8 50%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-.splash-content h2 { font-weight:800; margin-top:0.5rem; font-size:2.2rem; letter-spacing:-0.5px; }
-.splash-content h2 .q { color:#fff; }
-.splash-content h2 .s { color:#5BB8E8; }
+.splash-icon { font-size:4rem; color:#fff; }
+.splash-content h2 { font-weight:800; margin-top:0.5rem; font-size:2.2rem; letter-spacing:-0.5px; color:#fff; }
 .splash-tagline { color:#5BB8E8; font-size:1rem; letter-spacing:3px; text-transform:uppercase; font-weight:600; }
 .splash-detail { color:rgba(255,255,255,.6); font-size:0.85rem; margin-top:0.5rem; }
 .splash-spinner { margin:2rem auto; width:36px; height:36px; border:3px solid rgba(255,255,255,.15); border-top-color:#5BB8E8; border-radius:50%; animation:spin .7s linear infinite; }
@@ -187,6 +185,14 @@ body { background: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; marg
 .detail-chat { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 .detail-info .card-crm .card-header { font-size:0.85rem; text-transform:uppercase; letter-spacing:0.5px; }
 @media (max-width:900px) { .detail-body { flex-direction:column; } .detail-info { width:100%; min-width:auto; } }
+
+/* Invoice */
+.page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem; }
+.page-header h3 { margin:0; font-weight:700; }
+.modal-card .modal-footer { padding:1rem 1.25rem; border-top:1px solid #e5e7eb; display:flex; justify-content:flex-end; gap:0.5rem; }
+.inv-service-row .inv-amount { background:#f8f9fa; }
+#invoice-print-area .table-bordered th { background:#6B1414; color:#fff; }
+@media print { #invoice-print-area { position:absolute; top:0; left:0; width:100%; } }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width:6px; }

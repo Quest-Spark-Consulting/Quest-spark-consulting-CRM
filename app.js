@@ -134,6 +134,7 @@ function coachRender() {
     else if (state.view === 'industries') renderCoachIndustries(state.data);
     else if (state.view === 'reports') renderCoachReports(state.data);
     else if (state.view === 'feedback') renderCoachFeedback(state.data);
+    else if (state.view === 'invoices') renderCoachInvoices();
     else if (state.view === 'chat') { const c = state.data.find(x => x.id === state.chatClientId); if (c) renderCoachChat(c); }
     else if (state.view === 'client-detail') { const c = state.data.find(x => x.id === state.clientDetailId); if (c) renderCoachClientDetail(c); }
 }
@@ -218,14 +219,14 @@ window.exportExcel = function() {
         csv += '"' + c.name + '","' + c.industry + '","' + c.phone + '","' + c.status + '",' + msg + ',' + dt + '\n';
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'QuestSpark_Report.csv'; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'PoweringHouse_Report.csv'; a.click();
     URL.revokeObjectURL(a.href);
 };
 
 window.exportPDF = function() {
     const el = document.getElementById('reports-content');
     if (!el) return;
-    const opt = { margin: 0.5, filename: 'QuestSpark_Report.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
+    const opt = { margin: 0.5, filename: 'PoweringHouse_Report.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
     html2pdf().set(opt).from(el).save();
 };
 
@@ -619,12 +620,273 @@ $('feedback-form').addEventListener('submit', (e) => {
         };
         reader.readAsDataURL(f);
     }));
-    Promise.all(readerPromises).then(() => {
-        db.addFeedback(id, text, files).then(data => {
-            state.data = data;
-            $('feedback-modal').classList.add('d-none');
-            if (state.role === 'coach') coachRender();
-            else { state.clientData = state.data.find(c => c.id === id); clientRender('my-feedback'); }
+        Promise.all(readerPromises).then(() => {
+            db.addFeedback(id, text, files).then(data => {
+                state.data = data;
+                $('feedback-modal').classList.add('d-none');
+                if (state.role === 'coach') coachRender();
+                else { state.clientData = state.data.find(c => c.id === id); clientRender('my-feedback'); }
+            });
         });
+    });
+});
+
+// ===== INVOICES =====
+function renderCoachInvoices() {
+    const invoices = db.getInvoices();
+    const clients = state.data;
+    let html = `
+        <div class="page-header">
+            <h3><i class="bi bi-receipt"></i> Invoices</h3>
+            <button class="btn btn-primary" onclick="openNewInvoice()"><i class="bi bi-plus-lg"></i> New Invoice</button>
+        </div>
+        <div class="card"><div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Invoice</th><th>Date</th><th>Client</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+    `;
+    if (invoices.length === 0) {
+        html += '<tr><td colspan="6" class="text-center py-4" style="color:#94a3b8">No invoices yet. Create your first invoice.</td></tr>';
+    } else {
+        [...invoices].reverse().forEach(inv => {
+            const client = clients.find(c => c.id === inv.clientId);
+            const statusBadge = inv.status === 'paid' ? 'bg-success' : inv.status === 'sent' ? 'bg-primary' : 'bg-secondary';
+            html += `<tr>
+                <td><strong>${escapeHtml(inv.invoiceNumber)}</strong></td>
+                <td>${inv.date}</td>
+                <td>${client ? escapeHtml(client.name) : '—'}</td>
+                <td>KSh ${Number(inv.total).toLocaleString()}</td>
+                <td><span class="badge ${statusBadge}">${inv.status}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewInvoice(${inv.id})"><i class="bi bi-eye"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteInvoice(${inv.id})"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+    }
+    html += `</tbody></table></div></div>`;
+    viewContainer.innerHTML = html;
+}
+
+window.openNewInvoice = function() {
+    const clients = state.data;
+    const nextNum = String(db.getInvoices().length + 1).padStart(3, '0');
+    let html = `
+        <div class="modal-overlay" id="invoice-modal"><div class="modal-card" style="max-width:700px">
+            <div class="modal-header"><span><i class="bi bi-receipt"></i> New Invoice</span>
+                <button class="btn-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="inv-id" value="0">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice Number</label>
+                        <input type="text" id="inv-number" class="form-control" value="INV-${nextNum}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="inv-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Client</label>
+                        <select id="inv-client" class="form-select">
+                            <option value="">Select client...</option>
+                            ${clients.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <hr>
+                <label class="form-label">Services</label>
+                <div id="inv-services">
+                    <div class="row g-2 mb-2 inv-service-row">
+                        <div class="col-md-5"><input type="text" class="form-control form-control-sm inv-desc" placeholder="Description"></div>
+                        <div class="col-md-2"><input type="number" class="form-control form-control-sm inv-rate" placeholder="Rate" value="0"></div>
+                        <div class="col-md-2"><input type="number" class="form-control form-control-sm inv-hours" placeholder="Hours" value="0"></div>
+                        <div class="col-md-2"><input type="text" class="form-control form-control-sm inv-amount" placeholder="Amount" readonly></div>
+                        <div class="col-md-1"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.inv-service-row').remove(); calcInvTotal();"><i class="bi bi-x"></i></button></div>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary mb-3" onclick="addInvServiceRow()"><i class="bi bi-plus"></i> Add Service</button>
+                <div class="row mt-2">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="d-flex justify-content-between"><span>Subtotal:</span><span id="inv-subtotal">KSh 0</span></div>
+                        <div class="d-flex justify-content-between mt-1"><span>Total:</span><strong id="inv-total">KSh 0</strong></div>
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-2">
+                    <label class="form-label">Status</label>
+                    <select id="inv-status" class="form-select">
+                        <option value="draft">Draft</option>
+                        <option value="sent">Sent</option>
+                        <option value="paid">Paid</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Notes</label>
+                    <textarea id="inv-notes" class="form-control" rows="2" placeholder="Payment terms, notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveInvoice()"><i class="bi bi-check-lg"></i> Save Invoice</button>
+            </div>
+        </div></div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.querySelectorAll('.inv-rate, .inv-hours').forEach(el => {
+        el.addEventListener('input', calcInvTotal);
+    });
+};
+
+window.addInvServiceRow = function() {
+    const row = document.createElement('div');
+    row.className = 'row g-2 mb-2 inv-service-row';
+    row.innerHTML = `
+        <div class="col-md-5"><input type="text" class="form-control form-control-sm inv-desc" placeholder="Description"></div>
+        <div class="col-md-2"><input type="number" class="form-control form-control-sm inv-rate" placeholder="Rate" value="0"></div>
+        <div class="col-md-2"><input type="number" class="form-control form-control-sm inv-hours" placeholder="Hours" value="0"></div>
+        <div class="col-md-2"><input type="text" class="form-control form-control-sm inv-amount" placeholder="Amount" readonly></div>
+        <div class="col-md-1"><button class="btn btn-sm btn-outline-danger" onclick="this.closest('.inv-service-row').remove(); calcInvTotal();"><i class="bi bi-x"></i></button></div>
+    `;
+    document.getElementById('inv-services').appendChild(row);
+    row.querySelectorAll('.inv-rate, .inv-hours').forEach(el => el.addEventListener('input', calcInvTotal));
+};
+
+window.calcInvTotal = function() {
+    let subtotal = 0;
+    document.querySelectorAll('.inv-service-row').forEach(row => {
+        const rate = parseFloat(row.querySelector('.inv-rate').value) || 0;
+        const hours = parseFloat(row.querySelector('.inv-hours').value) || 0;
+        const amount = rate * hours;
+        row.querySelector('.inv-amount').value = amount.toLocaleString();
+        subtotal += amount;
+    });
+    document.getElementById('inv-subtotal').textContent = 'KSh ' + subtotal.toLocaleString();
+    document.getElementById('inv-total').textContent = 'KSh ' + subtotal.toLocaleString();
+};
+
+window.saveInvoice = function() {
+    const id = parseInt($('inv-id').value) || Date.now();
+    const invoice = {
+        id,
+        invoiceNumber: $('inv-number').value.trim() || 'INV-001',
+        date: $('inv-date').value,
+        clientId: parseInt($('inv-client').value),
+        services: [],
+        subtotal: 0,
+        total: 0,
+        status: $('inv-status').value,
+        notes: $('inv-notes').value.trim()
+    };
+    if (!invoice.clientId) { alert('Please select a client.'); return; }
+    document.querySelectorAll('.inv-service-row').forEach(row => {
+        const desc = row.querySelector('.inv-desc').value.trim();
+        const rate = parseFloat(row.querySelector('.inv-rate').value) || 0;
+        const hours = parseFloat(row.querySelector('.inv-hours').value) || 0;
+        if (desc) {
+            invoice.services.push({ description: desc, rate, hours, amount: rate * hours });
+            invoice.subtotal += rate * hours;
+        }
+    });
+    if (invoice.services.length === 0) { alert('Add at least one service.'); return; }
+    invoice.total = invoice.subtotal;
+    db.saveInvoice(invoice).then(() => {
+        document.getElementById('invoice-modal')?.closest('.modal-overlay')?.remove();
+        coachRender();
+    });
+};
+
+window.viewInvoice = function(id) {
+    const inv = db.getInvoices().find(i => i.id === id);
+    if (!inv) return;
+    const client = state.data.find(c => c.id === inv.clientId);
+    const statusBadge = inv.status === 'paid' ? 'bg-success' : inv.status === 'sent' ? 'bg-primary' : 'bg-secondary';
+    const statusColor = inv.status === 'paid' ? '#16a34a' : inv.status === 'sent' ? '#2563eb' : '#64748b';
+    viewContainer.innerHTML = `
+        <div class="page-header">
+            <h3><i class="bi bi-receipt"></i> Invoice</h3>
+            <div>
+                <button class="btn btn-outline-secondary" onclick="coachRender()"><i class="bi bi-arrow-left"></i> Back</button>
+                <button class="btn btn-outline-primary" onclick="printInvoice()"><i class="bi bi-printer"></i> Print</button>
+                <button class="btn btn-primary" onclick="exportInvoicePDF()"><i class="bi bi-file-pdf"></i> Export PDF</button>
+            </div>
+        </div>
+        <div class="card" id="invoice-print-area">
+            <div class="card-body p-4">
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <h2 style="color:#6B1414;font-weight:800;font-size:1.8rem">Powering House</h2>
+                        <p style="color:#64748b;font-size:0.85rem;margin:0">Coaching & Consulting</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <h3 style="color:#6B1414;font-weight:700">${escapeHtml(inv.invoiceNumber)}</h3>
+                        <p style="margin:0">Date: ${inv.date}</p>
+                        <span class="badge ${statusBadge}" style="font-size:0.85rem">${inv.status.toUpperCase()}</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <strong>Bill To:</strong>
+                        <p style="margin:2px 0">${client ? escapeHtml(client.name) : '—'}</p>
+                        <p style="margin:2px 0">${client ? escapeHtml(client.phone) : ''}</p>
+                        <p style="margin:2px 0">${client ? escapeHtml(client.industry) : ''}</p>
+                    </div>
+                </div>
+                <table class="table table-bordered">
+                    <thead style="background:#6B1414;color:#fff">
+                        <tr><th>Description</th><th style="width:100px">Rate (KSh)</th><th style="width:80px">Hours</th><th style="width:120px">Amount (KSh)</th></tr>
+                    </thead>
+                    <tbody>
+                        ${inv.services.map(s => `
+                            <tr>
+                                <td>${escapeHtml(s.description)}</td>
+                                <td>${Number(s.rate).toLocaleString()}</td>
+                                <td>${s.hours}</td>
+                                <td class="text-end">${Number(s.amount).toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr><td colspan="3" class="text-end"><strong>Total</strong></td><td class="text-end"><strong>KSh ${Number(inv.total).toLocaleString()}</strong></td></tr>
+                    </tfoot>
+                </table>
+                ${inv.notes ? `<div class="mt-3 p-3" style="background:#f8f9fa;border-radius:8px"><strong>Notes:</strong><br>${escapeHtml(inv.notes)}</div>` : ''}
+                <div class="mt-4 text-center" style="color:#94a3b8;font-size:0.8rem;border-top:1px solid #e5e7eb;padding-top:1rem">
+                    Powered by Quest Spark &middot; Powering House CRM
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+window.printInvoice = function() {
+    const content = document.getElementById('invoice-print-area')?.innerHTML;
+    if (!content) return;
+    const w = window.open('', '', 'width=800,height=600');
+    w.document.write(`
+        <html><head><title>Invoice</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+        <style>body{padding:2rem;font-family:'Segoe UI',sans-serif}table{width:100%}th{background:#6B1414;color:#fff;padding:8px}td{padding:6px 8px}</style>
+        </head><body>${content}</body></html>
+    `);
+    w.document.close();
+    setTimeout(() => { w.print(); w.close(); }, 500);
+};
+
+window.exportInvoicePDF = function() {
+    const el = document.getElementById('invoice-print-area');
+    if (!el) return;
+    const invNum = el.querySelector('h3')?.textContent || 'Invoice';
+    const opt = { margin: 0.5, filename: invNum.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+    html2pdf().set(opt).from(el).save();
+};
+
+window.deleteInvoice = function(id) {
+    if (!confirm('Delete this invoice?')) return;
+    db.deleteInvoice(id).then(() => coachRender());
+};
+
     });
 });

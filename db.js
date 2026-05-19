@@ -23,33 +23,84 @@ function normalize(data) {
     }));
 }
 
+function wrap(data) {
+    if (data && typeof data === 'object' && !Array.isArray(data) && 'clients' in data) return data;
+    return { clients: Array.isArray(data) ? data : [], invoices: [] };
+}
+
+function unwrap(wrapped) {
+    return wrapped ? (Array.isArray(wrapped) ? wrapped : (wrapped.clients || [])) : [];
+}
+
 let syncCallbacks = [];
 
 const db = {
     onSync(fn) { syncCallbacks.push(fn); },
     triggerSync() { syncCallbacks.forEach(fn => fn(db.load())); },
 
-    async save(data) {
-        localStorage.setItem('crm_data', JSON.stringify(data));
+    _getWrapped() {
+        const raw = localStorage.getItem('crm_data');
+        if (!raw) return { clients: INITIAL_DATA, invoices: [] };
+        const parsed = JSON.parse(raw);
+        return wrap(parsed);
+    },
+
+    async _saveWrapped(w) {
+        localStorage.setItem('crm_data', JSON.stringify(w));
         try {
-            await _sb.from('app_data').upsert({ id: 1, data: data, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+            await _sb.from('app_data').upsert({ id: 1, data: w, updated_at: new Date().toISOString() }, { onConflict: 'id' });
         } catch (e) { console.warn('Supabase sync failed (saving locally):', e.message); }
     },
 
+    async save(clients) {
+        const w = this._getWrapped();
+        w.clients = Array.isArray(clients) ? clients : [];
+        await this._saveWrapped(w);
+    },
+
     load() {
-        const data = localStorage.getItem('crm_data');
-        if (!data) return INITIAL_DATA;
-        const parsed = JSON.parse(data);
-        if (!parsed || parsed.length === 0) return INITIAL_DATA;
-        return normalize(parsed);
+        const w = this._getWrapped();
+        const clients = w.clients || [];
+        if (clients.length === 0) return INITIAL_DATA;
+        return normalize(clients);
+    },
+
+    getInvoices() {
+        const w = this._getWrapped();
+        return w.invoices || [];
+    },
+
+    async saveInvoice(invoice) {
+        const w = this._getWrapped();
+        const invoices = w.invoices || [];
+        const idx = invoices.findIndex(i => i.id === invoice.id);
+        if (idx >= 0) invoices[idx] = invoice;
+        else invoices.push(invoice);
+        w.invoices = invoices;
+        await this._saveWrapped(w);
+        return invoices;
+    },
+
+    async deleteInvoice(id) {
+        const w = this._getWrapped();
+        w.invoices = (w.invoices || []).filter(i => i.id !== id);
+        await this._saveWrapped(w);
+        return w.invoices;
     },
 
     async loadRemote() {
         try {
             const { data: row } = await _sb.from('app_data').select('data').eq('id', 1).single();
-            if (row?.data && Array.isArray(row.data) && row.data.length > 0) {
-                localStorage.setItem('crm_data', JSON.stringify(row.data));
-                return normalize(row.data);
+            if (row?.data) {
+                const parsed = row.data;
+                const clients = unwrap(parsed);
+                if (Array.isArray(clients) && clients.length > 0) {
+                    const local = this._getWrapped();
+                    const remote = wrap(parsed);
+                    remote.invoices = local.invoices || remote.invoices || [];
+                    localStorage.setItem('crm_data', JSON.stringify(remote));
+                    return normalize(remote.clients || []);
+                }
             }
         } catch (e) { console.warn('Supabase fetch failed (using local):', e.message); }
         return this.load();
