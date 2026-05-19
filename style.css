@@ -89,7 +89,6 @@ body { background: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; marg
 .login-header h2 .q { color:#fff; }
 .login-header h2 .s { color:#5BB8E8; }
 .login-header p { margin-top:0.3rem; opacity:.8; font-size:0.9rem; }
-.login-icon { font-size:3.5rem; color:#5BB8E8; margin-bottom:0.5rem; }
 .login-body { padding:2rem; }
 
 .divider { display:flex; align-items:center; margin:1.25rem 0; color:#9CA3AF; font-size:0.8rem; }
@@ -135,7 +134,7 @@ body { background: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; marg
 /* Splash */
 .splash-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#6B1D1D 0%,#4A1010 50%,#2D0A0A 100%); display:flex; align-items:center; justify-content:center; z-index:9999; }
 .splash-content { text-align:center; color:#fff; animation:modalIn .6s ease; }
-.splash-icon { font-size:4rem; color:#fff; }
+
 .splash-content h2 { font-weight:800; margin-top:0.5rem; font-size:2.2rem; letter-spacing:-0.5px; color:#fff; }
 .splash-tagline { color:#5BB8E8; font-size:1rem; letter-spacing:3px; text-transform:uppercase; font-weight:600; }
 .splash-detail { color:rgba(255,255,255,.6); font-size:0.85rem; margin-top:0.5rem; }
@@ -193,6 +192,13 @@ body { background: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; marg
 .inv-service-row .inv-amount { background:#f8f9fa; }
 #invoice-print-area .table-bordered th { background:#6B1414; color:#fff; }
 @media print { #invoice-print-area { position:absolute; top:0; left:0; width:100%; } }
+
+/* Brand Logo SVG */
+.brand-logo { display:inline-block; vertical-align:middle; }
+.brand-logo.login-logo { height:65px; margin-bottom:0.5rem; }
+.brand-logo.splash-logo { height:75px; }
+.brand-logo.sidebar-logo { height:32px; }
+.brand-logo.header-logo { height:26px; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width:6px; }
