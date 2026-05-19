@@ -40,9 +40,9 @@ const db = {
 
     _getWrapped() {
         const raw = localStorage.getItem('crm_data');
-        if (!raw) return { clients: INITIAL_DATA, invoices: [] };
-        const parsed = JSON.parse(raw);
-        return wrap(parsed);
+        if (!raw) return { clients: INITIAL_DATA, invoices: [], quotations: [] };
+        try { const parsed = JSON.parse(raw); return wrap(parsed); }
+        catch (e) { return { clients: INITIAL_DATA, invoices: [], quotations: [] }; }
     },
 
     async _saveWrapped(w) {
