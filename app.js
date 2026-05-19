@@ -151,7 +151,7 @@ function renderCoachDashboard(data) {
             <div class="stat-card"><div class="number">${total}</div><div class="label">Total Clients</div></div>
             <div class="stat-card blue"><div class="number">${leads}</div><div class="label">Active Leads</div></div>
             <div class="stat-card gold"><div class="number">${onboarded}</div><div class="label">Onboarded</div></div>
-            <div class="stat-card" style="background:linear-gradient(135deg,#5BB8E8,#87CEEB);color:#1f2937"><div class="number">${converted}</div><div class="label">Converted</div></div>
+            <div class="stat-card" style="background:linear-gradient(135deg,#f5c842,#87CEEB);color:#1f2937"><div class="number">${converted}</div><div class="label">Converted</div></div>
         </div>
         <div class="section-header"><h2>Recent Clients</h2></div>
         <div class="grid">${data.slice().reverse().slice(0, 6).map(c => clientCard(c)).join('')}</div>
@@ -474,7 +474,7 @@ function clientRender(view) {
                 ${hist.length === 0 ? '<p class="text-muted">No feedback yet.</p>' : hist.slice().reverse().map(h => `
                     <div class="feedback-entry">
                         <div class="feedback-date">${fmtDT(h.date)}</div>
-                        <div style="font-size:0.75rem;font-weight:600;color:#5BB8E8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Coach</div>
+                        <div style="font-size:0.75rem;font-weight:600;color:#f5c842;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Coach</div>
                         <div class="feedback-text">${h.text}</div>
                         ${h.files?.length > 0 ? `<div class="feedback-files">${h.files.map(f =>
                             f.type.startsWith('image/')
@@ -817,11 +817,11 @@ window.viewInvoice = function(id) {
             '<div class="card-body p-4">' +
                 '<div class="row mb-4">' +
                     '<div class="col-6">' +
-                        '<h2 style="color:#6B1414;font-weight:800;font-size:1.8rem">Powering House</h2>' +
+                        '<h2 style="color:#1a3c5e;font-weight:800;font-size:1.8rem">Powering House</h2>' +
                         '<p style="color:#64748b;font-size:0.85rem;margin:0">Coaching & Consulting</p>' +
                     '</div>' +
                     '<div class="col-6 text-end">' +
-                        '<h3 style="color:#6B1414;font-weight:700">' + escapeHtml(inv.invoiceNumber) + '</h3>' +
+                        '<h3 style="color:#1a3c5e;font-weight:700">' + escapeHtml(inv.invoiceNumber) + '</h3>' +
                         '<p style="margin:0">Date: ' + inv.date + '</p>' +
                         '<span class="badge ' + statusBadge + '" style="font-size:0.85rem">' + inv.status.toUpperCase() + '</span>' +
                     '</div>' +
@@ -836,7 +836,7 @@ window.viewInvoice = function(id) {
                     '</div>' +
                 '</div>' +
                 '<table class="table table-bordered">' +
-                    '<thead style="background:#6B1414;color:#fff">' +
+                    '<thead style="background:#1a3c5e;color:#fff">' +
                         '<tr><th>Description</th><th style="width:100px">Rate (KSh)</th><th style="width:80px">Hours</th><th style="width:120px">Amount (KSh)</th></tr>' +
                     '</thead>' +
                     '<tbody>' + serviceRows + '</tbody>' +
@@ -859,7 +859,7 @@ window.printInvoice = function() {
     w.document.write(`
         <html><head><title>Invoice</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-        <style>body{padding:2rem;font-family:'Segoe UI',sans-serif}table{width:100%}th{background:#6B1414;color:#fff;padding:8px}td{padding:6px 8px}</style>
+        <style>body{padding:2rem;font-family:'Segoe UI',sans-serif}table{width:100%}th{background:#1a3c5e;color:#fff;padding:8px}td{padding:6px 8px}</style>
         </head><body>${content}</body></html>
     `);
     w.document.close();
@@ -1075,11 +1075,11 @@ window.viewQuotation = function(id) {
             '<div class="card-body p-4">' +
                 '<div class="row mb-4">' +
                     '<div class="col-6">' +
-                        '<h2 style="color:#6B1414;font-weight:800;font-size:1.8rem">Powering House</h2>' +
+                        '<h2 style="color:#1a3c5e;font-weight:800;font-size:1.8rem">Powering House</h2>' +
                         '<p style="color:#64748b;font-size:0.85rem;margin:0">Coaching & Consulting</p>' +
                     '</div>' +
                     '<div class="col-6 text-end">' +
-                        '<h3 style="color:#6B1414;font-weight:700">' + escapeHtml(q.quoteNumber) + '</h3>' +
+                        '<h3 style="color:#1a3c5e;font-weight:700">' + escapeHtml(q.quoteNumber) + '</h3>' +
                         '<p style="margin:0">Date: ' + q.date + '</p>' +
                         validHtml +
                         '<span class="badge ' + badge + '" style="font-size:0.85rem">' + q.status.toUpperCase() + '</span>' +
@@ -1095,7 +1095,7 @@ window.viewQuotation = function(id) {
                     '</div>' +
                 '</div>' +
                 '<table class="table table-bordered">' +
-                    '<thead style="background:#6B1414;color:#fff">' +
+                    '<thead style="background:#1a3c5e;color:#fff">' +
                         '<tr><th>Description</th><th style="width:100px">Rate (KSh)</th><th style="width:80px">Hours</th><th style="width:120px">Amount (KSh)</th></tr>' +
                     '</thead>' +
                     '<tbody>' + serviceRows + '</tbody>' +
@@ -1118,7 +1118,7 @@ window.printQuotation = function() {
     w.document.write(`
         <html><head><title>Quotation</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-        <style>body{padding:2rem;font-family:'Segoe UI',sans-serif}table{width:100%}th{background:#6B1414;color:#fff;padding:8px}td{padding:6px 8px}</style>
+        <style>body{padding:2rem;font-family:'Segoe UI',sans-serif}table{width:100%}th{background:#1a3c5e;color:#fff;padding:8px}td{padding:6px 8px}</style>
         </head><body>${content}</body></html>
     `);
     w.document.close();
