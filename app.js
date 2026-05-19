@@ -692,7 +692,7 @@ window.openNewInvoice = function() {
                         <label class="form-label">Client</label>
                         <select id="inv-client" class="form-select">
                             <option value="">Select client...</option>
-                            ${clients.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+                            ${clients.map(c => '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>').join('')}
                         </select>
                     </div>
                 </div>
@@ -803,63 +803,54 @@ window.viewInvoice = function(id) {
     if (!inv) return;
     const client = state.data.find(c => c.id === inv.clientId);
     const statusBadge = inv.status === 'paid' ? 'bg-success' : inv.status === 'sent' ? 'bg-primary' : 'bg-secondary';
-    const statusColor = inv.status === 'paid' ? '#16a34a' : inv.status === 'sent' ? '#2563eb' : '#64748b';
-    viewContainer.innerHTML = `
-        <div class="page-header">
-            <h3><i class="bi bi-receipt"></i> Invoice</h3>
-            <div>
-                <button class="btn btn-outline-secondary" onclick="coachRender()"><i class="bi bi-arrow-left"></i> Back</button>
-                <button class="btn btn-outline-primary" onclick="printInvoice()"><i class="bi bi-printer"></i> Print</button>
-                <button class="btn btn-primary" onclick="exportInvoicePDF()"><i class="bi bi-file-pdf"></i> Export PDF</button>
-            </div>
-        </div>
-        <div class="card" id="invoice-print-area">
-            <div class="card-body p-4">
-                <div class="row mb-4">
-                    <div class="col-6">
-                        <h2 style="color:#6B1414;font-weight:800;font-size:1.8rem">Powering House</h2>
-                        <p style="color:#64748b;font-size:0.85rem;margin:0">Coaching & Consulting</p>
-                    </div>
-                    <div class="col-6 text-end">
-                        <h3 style="color:#6B1414;font-weight:700">${escapeHtml(inv.invoiceNumber)}</h3>
-                        <p style="margin:0">Date: ${inv.date}</p>
-                        <span class="badge ${statusBadge}" style="font-size:0.85rem">${inv.status.toUpperCase()}</span>
-                    </div>
-                </div>
-                <hr>
-                <div class="row mb-4">
-                    <div class="col-6">
-                        <strong>Bill To:</strong>
-                        <p style="margin:2px 0">${client ? escapeHtml(client.name) : '—'}</p>
-                        <p style="margin:2px 0">${client ? escapeHtml(client.phone) : ''}</p>
-                        <p style="margin:2px 0">${client ? escapeHtml(client.industry) : ''}</p>
-                    </div>
-                </div>
-                <table class="table table-bordered">
-                    <thead style="background:#6B1414;color:#fff">
-                        <tr><th>Description</th><th style="width:100px">Rate (KSh)</th><th style="width:80px">Hours</th><th style="width:120px">Amount (KSh)</th></tr>
-                    </thead>
-                    <tbody>
-                        ${inv.services.map(s => `
-                            <tr>
-                                <td>${escapeHtml(s.description)}</td>
-                                <td>${Number(s.rate).toLocaleString()}</td>
-                                <td>${s.hours}</td>
-                                <td class="text-end">${Number(s.amount).toLocaleString()}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                    <tfoot>
-                        <tr><td colspan="3" class="text-end"><strong>Total</strong></td><td class="text-end"><strong>KSh ${Number(inv.total).toLocaleString()}</strong></td></tr>
-                    </tfoot>
-                </table>
-                ${inv.notes ? `<div class="mt-3 p-3" style="background:#f8f9fa;border-radius:8px"><strong>Notes:</strong><br>${escapeHtml(inv.notes)}</div>` : ''}
-                <div class="mt-4 text-center" style="color:#94a3b8;font-size:0.8rem;border-top:1px solid #e5e7eb;padding-top:1rem">
-                    Powered by Quest Spark &middot; Powering House CRM
-                </div>
-            </div>
-        </div>
-    `;
+    const serviceRows = inv.services.map(s => '<tr><td>' + escapeHtml(s.description) + '</td><td>' + Number(s.rate).toLocaleString() + '</td><td>' + s.hours + '</td><td class="text-end">' + Number(s.amount).toLocaleString() + '</td></tr>').join('');
+    const notesHtml = inv.notes ? '<div class="mt-3 p-3" style="background:#f8f9fa;border-radius:8px"><strong>Notes:</strong><br>' + escapeHtml(inv.notes) + '</div>' : '';
+    viewContainer.innerHTML = 
+        '<div class="page-header">' +
+            '<h3><i class="bi bi-receipt"></i> Invoice</h3>' +
+            '<div>' +
+                '<button class="btn btn-outline-secondary" onclick="coachRender()"><i class="bi bi-arrow-left"></i> Back</button>' +
+                '<button class="btn btn-outline-primary" onclick="printInvoice()"><i class="bi bi-printer"></i> Print</button>' +
+                '<button class="btn btn-primary" onclick="exportInvoicePDF()"><i class="bi bi-file-pdf"></i> Export PDF</button>' +
+            '</div>' +
+        '</div>' +
+        '<div class="card" id="invoice-print-area">' +
+            '<div class="card-body p-4">' +
+                '<div class="row mb-4">' +
+                    '<div class="col-6">' +
+                        '<h2 style="color:#6B1414;font-weight:800;font-size:1.8rem">Powering House</h2>' +
+                        '<p style="color:#64748b;font-size:0.85rem;margin:0">Coaching & Consulting</p>' +
+                    '</div>' +
+                    '<div class="col-6 text-end">' +
+                        '<h3 style="color:#6B1414;font-weight:700">' + escapeHtml(inv.invoiceNumber) + '</h3>' +
+                        '<p style="margin:0">Date: ' + inv.date + '</p>' +
+                        '<span class="badge ' + statusBadge + '" style="font-size:0.85rem">' + inv.status.toUpperCase() + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<hr>' +
+                '<div class="row mb-4">' +
+                    '<div class="col-6">' +
+                        '<strong>Bill To:</strong>' +
+                        '<p style="margin:2px 0">' + (client ? escapeHtml(client.name) : '\u2014') + '</p>' +
+                        '<p style="margin:2px 0">' + (client ? escapeHtml(client.phone) : '') + '</p>' +
+                        '<p style="margin:2px 0">' + (client ? escapeHtml(client.industry) : '') + '</p>' +
+                    '</div>' +
+                '</div>' +
+                '<table class="table table-bordered">' +
+                    '<thead style="background:#6B1414;color:#fff">' +
+                        '<tr><th>Description</th><th style="width:100px">Rate (KSh)</th><th style="width:80px">Hours</th><th style="width:120px">Amount (KSh)</th></tr>' +
+                    '</thead>' +
+                    '<tbody>' + serviceRows + '</tbody>' +
+                    '<tfoot>' +
+                        '<tr><td colspan="3" class="text-end"><strong>Total</strong></td><td class="text-end"><strong>KSh ' + Number(inv.total).toLocaleString() + '</strong></td></tr>' +
+                    '</tfoot>' +
+                '</table>' +
+                notesHtml +
+                '<div class="mt-4 text-center" style="color:#94a3b8;font-size:0.8rem;border-top:1px solid #e5e7eb;padding-top:1rem">' +
+                    'Powered by Quest Spark \u00B7 Powering House CRM' +
+                '</div>' +
+            '</div>' +
+        '</div>';
 };
 
 window.printInvoice = function() {
@@ -956,7 +947,7 @@ window.openNewQuotation = function() {
                         <label class="form-label">Client</label>
                         <select id="q-client" class="form-select">
                             <option value="">Select client...</option>
-                            ${clients.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+                            ${clients.map(c => '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>').join('')}
                         </select>
                     </div>
                 </div>
@@ -1069,63 +1060,56 @@ window.viewQuotation = function(id) {
     if (!q) return;
     const client = state.data.find(c => c.id === q.clientId);
     const badge = q.status === 'approved' ? 'bg-success' : q.status === 'rejected' ? 'bg-danger' : q.status === 'sent' ? 'bg-primary' : 'bg-secondary';
-    viewContainer.innerHTML = `
-        <div class="page-header">
-            <h3><i class="bi bi-file-text"></i> Quotation</h3>
-            <div>
-                <button class="btn btn-outline-secondary" onclick="coachRender()"><i class="bi bi-arrow-left"></i> Back</button>
-                <button class="btn btn-outline-primary" onclick="printQuotation()"><i class="bi bi-printer"></i> Print</button>
-                <button class="btn btn-primary" onclick="exportQuotationPDF()"><i class="bi bi-file-pdf"></i> Export PDF</button>
-            </div>
-        </div>
-        <div class="card" id="quote-print-area">
-            <div class="card-body p-4">
-                <div class="row mb-4">
-                    <div class="col-6">
-                        <h2 style="color:#6B1414;font-weight:800;font-size:1.8rem">Powering House</h2>
-                        <p style="color:#64748b;font-size:0.85rem;margin:0">Coaching & Consulting</p>
-                    </div>
-                    <div class="col-6 text-end">
-                        <h3 style="color:#6B1414;font-weight:700">${escapeHtml(q.quoteNumber)}</h3>
-                        <p style="margin:0">Date: ${q.date}</p>
-                        ${q.validUntil ? `<p style="margin:0">Valid Until: ${q.validUntil}</p>` : ''}
-                        <span class="badge ${badge}" style="font-size:0.85rem">${q.status.toUpperCase()}</span>
-                    </div>
-                </div>
-                <hr>
-                <div class="row mb-4">
-                    <div class="col-6">
-                        <strong>Prepared For:</strong>
-                        <p style="margin:2px 0">${client ? escapeHtml(client.name) : '—'}</p>
-                        <p style="margin:2px 0">${client ? escapeHtml(client.phone) : ''}</p>
-                        <p style="margin:2px 0">${client ? escapeHtml(client.industry) : ''}</p>
-                    </div>
-                </div>
-                <table class="table table-bordered">
-                    <thead style="background:#6B1414;color:#fff">
-                        <tr><th>Description</th><th style="width:100px">Rate (KSh)</th><th style="width:80px">Hours</th><th style="width:120px">Amount (KSh)</th></tr>
-                    </thead>
-                    <tbody>
-                        ${q.services.map(s => `
-                            <tr>
-                                <td>${escapeHtml(s.description)}</td>
-                                <td>${Number(s.rate).toLocaleString()}</td>
-                                <td>${s.hours}</td>
-                                <td class="text-end">${Number(s.amount).toLocaleString()}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                    <tfoot>
-                        <tr><td colspan="3" class="text-end"><strong>Total</strong></td><td class="text-end"><strong>KSh ${Number(q.total).toLocaleString()}</strong></td></tr>
-                    </tfoot>
-                </table>
-                ${q.notes ? `<div class="mt-3 p-3" style="background:#f8f9fa;border-radius:8px"><strong>Terms & Notes:</strong><br>${escapeHtml(q.notes)}</div>` : ''}
-                <div class="mt-4 text-center" style="color:#94a3b8;font-size:0.8rem;border-top:1px solid #e5e7eb;padding-top:1rem">
-                    Powered by Quest Spark &middot; Powering House CRM
-                </div>
-            </div>
-        </div>
-    `;
+    const serviceRows = q.services.map(s => '<tr><td>' + escapeHtml(s.description) + '</td><td>' + Number(s.rate).toLocaleString() + '</td><td>' + s.hours + '</td><td class="text-end">' + Number(s.amount).toLocaleString() + '</td></tr>').join('');
+    const notesHtml = q.notes ? '<div class="mt-3 p-3" style="background:#f8f9fa;border-radius:8px"><strong>Terms & Notes:</strong><br>' + escapeHtml(q.notes) + '</div>' : '';
+    const validHtml = q.validUntil ? '<p style="margin:0">Valid Until: ' + q.validUntil + '</p>' : '';
+    viewContainer.innerHTML = 
+        '<div class="page-header">' +
+            '<h3><i class="bi bi-file-text"></i> Quotation</h3>' +
+            '<div>' +
+                '<button class="btn btn-outline-secondary" onclick="coachRender()"><i class="bi bi-arrow-left"></i> Back</button>' +
+                '<button class="btn btn-outline-primary" onclick="printQuotation()"><i class="bi bi-printer"></i> Print</button>' +
+                '<button class="btn btn-primary" onclick="exportQuotationPDF()"><i class="bi bi-file-pdf"></i> Export PDF</button>' +
+            '</div>' +
+        '</div>' +
+        '<div class="card" id="quote-print-area">' +
+            '<div class="card-body p-4">' +
+                '<div class="row mb-4">' +
+                    '<div class="col-6">' +
+                        '<h2 style="color:#6B1414;font-weight:800;font-size:1.8rem">Powering House</h2>' +
+                        '<p style="color:#64748b;font-size:0.85rem;margin:0">Coaching & Consulting</p>' +
+                    '</div>' +
+                    '<div class="col-6 text-end">' +
+                        '<h3 style="color:#6B1414;font-weight:700">' + escapeHtml(q.quoteNumber) + '</h3>' +
+                        '<p style="margin:0">Date: ' + q.date + '</p>' +
+                        validHtml +
+                        '<span class="badge ' + badge + '" style="font-size:0.85rem">' + q.status.toUpperCase() + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<hr>' +
+                '<div class="row mb-4">' +
+                    '<div class="col-6">' +
+                        '<strong>Prepared For:</strong>' +
+                        '<p style="margin:2px 0">' + (client ? escapeHtml(client.name) : '\u2014') + '</p>' +
+                        '<p style="margin:2px 0">' + (client ? escapeHtml(client.phone) : '') + '</p>' +
+                        '<p style="margin:2px 0">' + (client ? escapeHtml(client.industry) : '') + '</p>' +
+                    '</div>' +
+                '</div>' +
+                '<table class="table table-bordered">' +
+                    '<thead style="background:#6B1414;color:#fff">' +
+                        '<tr><th>Description</th><th style="width:100px">Rate (KSh)</th><th style="width:80px">Hours</th><th style="width:120px">Amount (KSh)</th></tr>' +
+                    '</thead>' +
+                    '<tbody>' + serviceRows + '</tbody>' +
+                    '<tfoot>' +
+                        '<tr><td colspan="3" class="text-end"><strong>Total</strong></td><td class="text-end"><strong>KSh ' + Number(q.total).toLocaleString() + '</strong></td></tr>' +
+                    '</tfoot>' +
+                '</table>' +
+                notesHtml +
+                '<div class="mt-4 text-center" style="color:#94a3b8;font-size:0.8rem;border-top:1px solid #e5e7eb;padding-top:1rem">' +
+                    'Powered by Quest Spark \u00B7 Powering House CRM' +
+                '</div>' +
+            '</div>' +
+        '</div>';
 };
 
 window.printQuotation = function() {
